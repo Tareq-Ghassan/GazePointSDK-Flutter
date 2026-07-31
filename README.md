@@ -2,6 +2,10 @@
 
 Cross-platform Flutter **plugin wrapper** for the native GazePoint SDKs (Android + iOS).
 
+**Repository:** [Tareq-Ghassan/GazePointSDK-Flutter](https://github.com/Tareq-Ghassan/GazePointSDK-Flutter)  
+**Umbrella monorepo:** [FaceDetection-GazePoint](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint)  
+**Package name:** `gazepoint_sdk` (pub.dev)
+
 This package does **not** reimplement gaze math. It depends on:
 
 - [`../android/gazepoint-sdk`](../android/gazepoint-sdk) (ML Kit `Face` → gaze)
@@ -12,20 +16,37 @@ The plugin’s native layer owns camera capture + face detection (ported from th
 ## Layout
 
 ```text
-flutter/             → this plugin
+flutter/             → this plugin (GazePointSDK-Flutter)
 flutter_example/     → demo host app (path dependency)
 android/gazepoint-sdk
 ios/
 ```
 
-## Installation (monorepo / path)
+## Installation
 
-In your app `pubspec.yaml`:
+### From pub.dev (after publish)
+
+```yaml
+dependencies:
+  gazepoint_sdk: ^2.0.0
+```
+
+### From Git
 
 ```yaml
 dependencies:
   gazepoint_sdk:
-    path: ../flutter   # or your relative path
+    git:
+      url: https://github.com/Tareq-Ghassan/GazePointSDK-Flutter.git
+      ref: 2.0.0
+```
+
+### Monorepo / path (development)
+
+```yaml
+dependencies:
+  gazepoint_sdk:
+    path: ../flutter
 ```
 
 Then:
@@ -54,7 +75,7 @@ platform :ios, '16.0'
 pod 'GazePointSDK', :path => '../../ios'
 ```
 
-Add `NSCameraUsageDescription` to `Info.plist`.
+When consuming a published Flutter plugin that vendors/links the native iOS SDK via SPM/CocoaPods, follow the plugin’s iOS setup notes. Add `NSCameraUsageDescription` to `Info.plist`.
 
 ## Quick start
 
@@ -102,7 +123,13 @@ flutter run   # physical device; camera required
 |----------|---------|------------|
 | Android  | API 24  | `android/gazepoint-sdk` |
 | iOS      | iOS 16  | `ios` (GazePointSDK) |
+| Flutter  | 3.38.4+ | Dart 3.5+ |
 
 ## License
 
 MIT
+
+## Support
+
+- Issues: [GazePointSDK-Flutter](https://github.com/Tareq-Ghassan/GazePointSDK-Flutter/issues)
+- Umbrella: [FaceDetection-GazePoint](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/issues)

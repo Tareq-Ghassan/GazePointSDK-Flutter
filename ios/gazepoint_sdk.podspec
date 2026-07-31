@@ -1,5 +1,5 @@
 #
-# Flutter plugin wrapper around the native GazePointSDK (../ios).
+# Flutter plugin wrapper around the native GazePointSDK.
 #
 Pod::Spec.new do |s|
   s.name             = 'gazepoint_sdk'
@@ -8,14 +8,14 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
     Cross-platform Flutter plugin wrapping the native GazePoint SDKs.
   DESC
-  s.homepage         = 'https://github.com/Tareq-Ghassan/FaceDetection-GazePoint'
-  s.license          = { :type => 'MIT' }
-  s.author           = { 'GazePoint' => 'support@gazepoint.com' }
+  s.homepage         = 'https://github.com/Tareq-Ghassan/GazePointSDK-Flutter'
+  s.license          = { :type => 'MIT', :file => '../LICENSE' }
+  s.author           = { 'Tareq Abu Saleh' => 'https://github.com/Tareq-Ghassan' }
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'
   s.dependency 'Flutter'
   s.dependency 'GazePointSDK'
   s.platform = :ios, '16.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.swift_version = '5.0'
+  s.swift_version = '6.0'
 end
