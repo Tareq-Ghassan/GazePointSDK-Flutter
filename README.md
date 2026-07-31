@@ -1,81 +1,40 @@
 # GazePoint SDK for Flutter
 
-Cross-platform Flutter **plugin wrapper** for the native GazePoint SDKs (Android + iOS).
+Cross-platform Flutter plugin for eye tracking and gaze point detection on Android and iOS.
 
 **Repository:** [Tareq-Ghassan/GazePointSDK-Flutter](https://github.com/Tareq-Ghassan/GazePointSDK-Flutter)  
-**Umbrella monorepo:** [FaceDetection-GazePoint](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint)  
-**Package name:** `gazepoint_sdk` (pub.dev)
+**Package:** `gazepoint_sdk`
 
-This package does **not** reimplement gaze math. It depends on:
+Native gaze math is **vendored** inside this plugin (Android Kotlin + iOS Swift), so the package is self-contained for pub.dev. Standalone native SDKs remain in:
 
-- [`../android/gazepoint-sdk`](../android/gazepoint-sdk) (ML Kit `Face` → gaze)
-- [`../ios`](../ios) (Vision / `CVPixelBuffer` → gaze)
-
-The plugin’s native layer owns camera capture + face detection (ported from the native examples) and calls into those SDKs.
-
-## Layout
-
-```text
-flutter/             → this plugin (GazePointSDK-Flutter)
-flutter_example/     → demo host app (path dependency)
-android/gazepoint-sdk
-ios/
-```
+- [GazePointSDK-Android](https://github.com/Tareq-Ghassan/GazePointSDK-Android)
+- [GazePointSDK-iOS](https://github.com/Tareq-Ghassan/GazePointSDK-iOS)
 
 ## Installation
-
-### From pub.dev (after publish)
 
 ```yaml
 dependencies:
   gazepoint_sdk: ^2.0.0
 ```
 
-### From Git
-
-```yaml
-dependencies:
-  gazepoint_sdk:
-    git:
-      url: https://github.com/Tareq-Ghassan/GazePointSDK-Flutter.git
-      ref: 2.0.0
-```
-
-### Monorepo / path (development)
-
-```yaml
-dependencies:
-  gazepoint_sdk:
-    path: ../flutter
-```
-
-Then:
-
 ```bash
 flutter pub get
 ```
 
-### Android host wiring
+### Android
 
-In the app’s `android/settings.gradle(.kts)`, include the local SDK module (same as `android_example`):
+- Min SDK **24**
+- Camera permission is declared by the plugin; request it at runtime via `requestCameraPermission()`
 
-```kotlin
-include(":gazepoint-sdk")
-project(":gazepoint-sdk").projectDir = file("../../android/gazepoint-sdk")
+### iOS
+
+- Deployment target **iOS 16.0+**
+- Add to `Info.plist`:
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Camera access is required for eye tracking</string>
 ```
-
-Declare camera permission in the app manifest. Min SDK **24**.
-
-### iOS host wiring
-
-In the app’s `ios/Podfile`:
-
-```ruby
-platform :ios, '16.0'
-pod 'GazePointSDK', :path => '../../ios'
-```
-
-When consuming a published Flutter plugin that vendors/links the native iOS SDK via SPM/CocoaPods, follow the plugin’s iOS setup notes. Add `NSCameraUsageDescription` to `Info.plist`.
 
 ## Quick start
 
@@ -95,8 +54,6 @@ if (await tracker.requestCameraPermission()) {
 
 ### Calibration
 
-Native SDKs take **expected/actual** pairs:
-
 ```dart
 await tracker.calibrate([
   GazeCalibrationPoint(
@@ -109,7 +66,7 @@ await tracker.calibrate([
 
 ## Example app
 
-See [`../flutter_example`](../flutter_example) for a full demo (status panel, gaze indicator, calibration).
+See the umbrella monorepo [`flutter_example`](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/flutter_example):
 
 ```bash
 cd flutter_example
@@ -119,17 +76,16 @@ flutter run   # physical device; camera required
 
 ## Platform support
 
-| Platform | Minimum | Native SDK |
-|----------|---------|------------|
-| Android  | API 24  | `android/gazepoint-sdk` |
-| iOS      | iOS 16  | `ios` (GazePointSDK) |
-| Flutter  | 3.38.4+ | Dart 3.5+ |
+| Platform | Minimum |
+|----------|---------|
+| Android  | API 24  |
+| iOS      | iOS 16  |
+| Flutter  | 3.38.4+ |
 
 ## License
 
-MIT
+MIT — Copyright (c) 2024 Tareq Abu Saleh
 
 ## Support
 
 - Issues: [GazePointSDK-Flutter](https://github.com/Tareq-Ghassan/GazePointSDK-Flutter/issues)
-- Umbrella: [FaceDetection-GazePoint](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/issues)

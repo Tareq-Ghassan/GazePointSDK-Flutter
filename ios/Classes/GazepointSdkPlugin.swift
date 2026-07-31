@@ -1,11 +1,11 @@
 import AVFoundation
 import Flutter
-import GazePointSDK
 import UIKit
 
 /**
  Flutter plugin wrapper around the iOS GazePoint SDK.
- Owns AVCapture + Vision pipeline and delegates gaze math to GazeTracker.
+ Owns AVCapture + Vision pipeline and delegates gaze math to GazeTracker
+ (vendored under Classes/GazePointSDK).
  */
 public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var methodChannel: FlutterMethodChannel?
