@@ -1,0 +1,4 @@
+rootProject.name = 'gazepoint_sdk'
+
+include ':gazepoint-sdk'
+project(':gazepoint-sdk').projectDir = new File(settingsDir, '../../android/gazepoint-sdk')

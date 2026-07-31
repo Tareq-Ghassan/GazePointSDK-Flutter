@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
 
 import 'gazepoint_sdk_platform_interface.dart';
+import 'models/gaze_calibration_point.dart';
 import 'models/gaze_result.dart';
 import 'models/performance_metrics.dart';
 
@@ -58,15 +58,11 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   }
 
   @override
-  Future<void> calibrate(List<Offset> calibrationPoints) async {
+  Future<void> calibrate(List<GazeCalibrationPoint> calibrationPoints) async {
     try {
-      final points = calibrationPoints.map((p) => {
-        'x': p.dx,
-        'y': p.dy,
-      }).toList();
-      
       await methodChannel.invokeMethod<void>('calibrate', {
-        'calibrationPoints': points,
+        'calibrationPoints':
+            calibrationPoints.map((p) => p.toJson()).toList(),
       });
     } on PlatformException catch (e) {
       throw Exception('Failed to calibrate: ${e.message}');
@@ -97,7 +93,9 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
 
   @override
   Stream<GazeResult> get gazeStream {
-    _gazeStream ??= eventChannel.receiveBroadcastStream().map((event) {
+    _gazeStream ??= eventChannel.receiveBroadcastStream().where((event) {
+      return event is Map;
+    }).map((event) {
       return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
     });
     return _gazeStream!;

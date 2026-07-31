@@ -1,8 +1,7 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:ui';
 
 import 'gazepoint_sdk_method_channel.dart';
+import 'models/gaze_calibration_point.dart';
 import 'models/gaze_result.dart';
 import 'models/performance_metrics.dart';
 
@@ -46,8 +45,8 @@ abstract class GazepointSdkPlatform extends PlatformInterface {
     throw UnimplementedError('getLatestGaze() has not been implemented.');
   }
 
-  /// Calibrate with known screen points
-  Future<void> calibrate(List<Offset> calibrationPoints) {
+  /// Calibrate with expected/actual screen point pairs
+  Future<void> calibrate(List<GazeCalibrationPoint> calibrationPoints) {
     throw UnimplementedError('calibrate() has not been implemented.');
   }
 
