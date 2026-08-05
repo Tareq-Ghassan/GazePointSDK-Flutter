@@ -1,3 +1,9 @@
+## 2.1.0
+
+* Improve pub.dev package quality: dartdoc on public API, plugin `example/` app.
+* Add iOS Swift Package Manager manifest for the Flutter plugin.
+* Restore explicit Kotlin Android plugin configuration for reliable builds.
+
 ## 2.0.0
 
 * Initial public release of the Flutter GazePoint plugin.

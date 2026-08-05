@@ -14,7 +14,7 @@ Native gaze math is **vendored** inside this plugin (Android Kotlin + iOS Swift)
 
 ```yaml
 dependencies:
-  gazepoint_sdk: ^2.0.0
+  gazepoint_sdk: ^2.1.0
 ```
 
 ```bash
