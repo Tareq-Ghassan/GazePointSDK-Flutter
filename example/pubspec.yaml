@@ -1,0 +1,22 @@
+name: gazepoint_sdk_example
+description: Example app demonstrating gazepoint_sdk usage.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.38.4"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  gazepoint_sdk:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

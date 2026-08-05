@@ -18,6 +18,13 @@ class GazeResult {
   /// Timestamp of the result (milliseconds since epoch)
   final int timestamp;
 
+  /// Creates a new gaze result with tracking data.
+  ///
+  /// - [gazePoint]: The calculated gaze point in screen coordinates
+  /// - [confidence]: Confidence score from 0.0 to 1.0
+  /// - [isBlinking]: Whether the user is currently blinking
+  /// - [headPose]: Head pose information (pitch, yaw, roll)
+  /// - [timestamp]: Timestamp in milliseconds since epoch
   const GazeResult({
     required this.gazePoint,
     required this.confidence,
