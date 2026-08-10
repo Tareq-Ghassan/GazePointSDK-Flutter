@@ -1,6 +1,3 @@
-// Copyright (c) 2024-2026, Tareq Abu Saleh. Use of this source code is governed by a
-// MIT license that can be found in the LICENSE file.
-
 /// GazePoint SDK - Advanced cross-platform eye tracking and gaze point detection for Flutter.
 ///
 /// This library provides real-time eye tracking capabilities for Flutter applications
