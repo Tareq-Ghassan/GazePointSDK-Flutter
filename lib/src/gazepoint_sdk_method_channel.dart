@@ -61,8 +61,7 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   Future<void> calibrate(List<GazeCalibrationPoint> calibrationPoints) async {
     try {
       await methodChannel.invokeMethod<void>('calibrate', {
-        'calibrationPoints':
-            calibrationPoints.map((p) => p.toJson()).toList(),
+        'calibrationPoints': calibrationPoints.map((p) => p.toJson()).toList(),
       });
     } on PlatformException catch (e) {
       throw Exception('Failed to calibrate: ${e.message}');
@@ -81,7 +80,9 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   @override
   Future<PerformanceMetrics> getPerformanceMetrics() async {
     try {
-      final result = await methodChannel.invokeMethod<Map>('getPerformanceMetrics');
+      final result = await methodChannel.invokeMethod<Map>(
+        'getPerformanceMetrics',
+      );
       if (result == null) {
         throw Exception('No performance metrics available');
       }
@@ -93,11 +94,14 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
 
   @override
   Stream<GazeResult> get gazeStream {
-    _gazeStream ??= eventChannel.receiveBroadcastStream().where((event) {
-      return event is Map;
-    }).map((event) {
-      return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
-    });
+    _gazeStream ??= eventChannel
+        .receiveBroadcastStream()
+        .where((event) {
+          return event is Map;
+        })
+        .map((event) {
+          return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
+        });
     return _gazeStream!;
   }
 
@@ -115,7 +119,9 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   @override
   Future<bool> hasCameraPermission() async {
     try {
-      final result = await methodChannel.invokeMethod<bool>('hasCameraPermission');
+      final result = await methodChannel.invokeMethod<bool>(
+        'hasCameraPermission',
+      );
       return result ?? false;
     } on PlatformException catch (e) {
       debugPrint('Failed to check camera permission: ${e.message}');
@@ -126,7 +132,9 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   @override
   Future<bool> requestCameraPermission() async {
     try {
-      final result = await methodChannel.invokeMethod<bool>('requestCameraPermission');
+      final result = await methodChannel.invokeMethod<bool>(
+        'requestCameraPermission',
+      );
       return result ?? false;
     } on PlatformException catch (e) {
       debugPrint('Failed to request camera permission: ${e.message}');

@@ -57,7 +57,9 @@ abstract class GazepointSdkPlatform extends PlatformInterface {
 
   /// Get performance metrics
   Future<PerformanceMetrics> getPerformanceMetrics() {
-    throw UnimplementedError('getPerformanceMetrics() has not been implemented.');
+    throw UnimplementedError(
+      'getPerformanceMetrics() has not been implemented.',
+    );
   }
 
   /// Stream of gaze results
@@ -77,6 +79,8 @@ abstract class GazepointSdkPlatform extends PlatformInterface {
 
   /// Request camera permission
   Future<bool> requestCameraPermission() {
-    throw UnimplementedError('requestCameraPermission() has not been implemented.');
+    throw UnimplementedError(
+      'requestCameraPermission() has not been implemented.',
+    );
   }
 }
