@@ -62,7 +62,6 @@
 ///
 /// For detailed documentation, platform-specific setup, and examples, see:
 /// https://github.com/Tareq-Ghassan/GazePointSDK-Flutter#readme
-library gazepoint_sdk;
 
 export 'src/gazepoint_sdk_platform_interface.dart';
 export 'src/gazepoint_sdk_method_channel.dart';

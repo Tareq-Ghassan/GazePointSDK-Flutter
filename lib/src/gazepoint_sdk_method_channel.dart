@@ -8,6 +8,12 @@ import 'models/performance_metrics.dart';
 
 /// An implementation of [GazepointSdkPlatform] that uses method channels.
 class MethodChannelGazepointSdk extends GazepointSdkPlatform {
+  /// Creates a [MethodChannelGazepointSdk] instance.
+  ///
+  /// This is the default platform implementation using Flutter's MethodChannel
+  /// for communication with native code.
+  MethodChannelGazepointSdk();
+
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('gazepoint_sdk');

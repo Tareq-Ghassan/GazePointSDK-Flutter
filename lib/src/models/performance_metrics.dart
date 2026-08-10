@@ -15,6 +15,10 @@ class PerformanceMetrics {
   /// Total frames processed
   final int totalFrames;
 
+  /// Creates [PerformanceMetrics] with the specified performance data.
+  ///
+  /// Use this to track real-time performance of the gaze tracking system.
+  /// Check [isPerformanceDegraded] to monitor if performance drops below acceptable levels.
   const PerformanceMetrics({
     required this.fps,
     required this.avgProcessingTimeMs,

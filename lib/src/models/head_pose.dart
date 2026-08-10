@@ -9,6 +9,12 @@ class HeadPose {
   /// Roll angle (tilting left and right)
   final double roll;
 
+  /// Creates a [HeadPose] with the specified orientation angles.
+  ///
+  /// All angles are measured in degrees:
+  /// - [pitch]: Nodding up (-) and down (+)
+  /// - [yaw]: Turning left (-) and right (+)
+  /// - [roll]: Tilting left (-) and right (+)
   const HeadPose({
     required this.pitch,
     required this.yaw,
