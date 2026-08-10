@@ -1,5 +1,5 @@
 name: gazepoint_sdk
-description: Cross-platform Flutter plugin for eye tracking and gaze point detection on Android and iOS.
+description: Advanced cross-platform eye tracking and gaze detection for Flutter. Supports Android, iOS, Web, Windows, macOS, and Linux with real-time performance.
 version: 3.0.0
 homepage: https://github.com/Tareq-Ghassan/GazePointSDK-Flutter
 repository: https://github.com/Tareq-Ghassan/GazePointSDK-Flutter
@@ -12,6 +12,9 @@ topics:
   - camera
   - ml-kit
   - vision
+  - computer-vision
+  - opencv
+  - mediapipe
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -34,4 +37,13 @@ flutter:
         package: com.gazepoint.flutter
         pluginClass: GazepointSdkPlugin
       ios:
+        pluginClass: GazepointSdkPlugin
+      web:
+        pluginClass: GazepointSdkWeb
+        fileName: gazepoint_sdk_web.dart
+      windows:
+        pluginClass: GazepointSdkPluginWindows
+      macos:
+        pluginClass: GazepointSdkPlugin
+      linux:
         pluginClass: GazepointSdkPlugin
