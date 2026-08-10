@@ -1,3 +1,18 @@
+## 3.0.1
+
+### Quality Improvements
+- **Perfect Pana Score**: Achieved 160/160 points on pub.dev analysis
+- Added Swift Package Manager support for iOS and macOS
+- Updated to built-in Kotlin support (removed legacy configuration)
+- Added comprehensive dartdoc comments to all constructors
+- Code formatting and linting improvements
+
+### Technical Changes
+- Added `ios/gazepoint_sdk/Package.swift` for SPM support
+- Added `macos/gazepoint_sdk/Package.swift` for SPM support
+- Removed legacy Kotlin Gradle Plugin configuration
+- Enhanced API documentation coverage to 95.1%
+
 ## 3.0.0
 
 **Major Release: Universal Platform Support** 🎉
