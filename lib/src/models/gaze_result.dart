@@ -5,16 +5,16 @@ import 'head_pose.dart';
 class GazeResult {
   /// The calculated gaze point in screen coordinates
   final Offset gazePoint;
-  
+
   /// Confidence score from 0.0 to 1.0
   final double confidence;
-  
+
   /// Whether the user is blinking
   final bool isBlinking;
-  
+
   /// Head pose information
   final HeadPose headPose;
-  
+
   /// Timestamp of the result (milliseconds since epoch)
   final int timestamp;
 
@@ -78,12 +78,6 @@ class GazeResult {
 
   @override
   int get hashCode {
-    return Object.hash(
-      gazePoint,
-      confidence,
-      isBlinking,
-      headPose,
-      timestamp,
-    );
+    return Object.hash(gazePoint, confidence, isBlinking, headPose, timestamp);
   }
 }

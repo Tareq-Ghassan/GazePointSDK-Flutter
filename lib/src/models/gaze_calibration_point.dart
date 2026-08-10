@@ -12,10 +12,7 @@ class GazeCalibrationPoint {
   ///
   /// The [expected] parameter represents where the user was asked to look,
   /// while [actual] represents where the tracker measured the gaze.
-  const GazeCalibrationPoint({
-    required this.expected,
-    required this.actual,
-  });
+  const GazeCalibrationPoint({required this.expected, required this.actual});
 
   /// Converts this calibration point to a JSON map.
   ///

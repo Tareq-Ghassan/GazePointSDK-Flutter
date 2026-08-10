@@ -2,10 +2,10 @@
 class HeadPose {
   /// Pitch angle (nodding up and down)
   final double pitch;
-  
+
   /// Yaw angle (turning left and right)
   final double yaw;
-  
+
   /// Roll angle (tilting left and right)
   final double roll;
 
@@ -15,11 +15,7 @@ class HeadPose {
   /// - [pitch]: Nodding up (-) and down (+)
   /// - [yaw]: Turning left (-) and right (+)
   /// - [roll]: Tilting left (-) and right (+)
-  const HeadPose({
-    required this.pitch,
-    required this.yaw,
-    required this.roll,
-  });
+  const HeadPose({required this.pitch, required this.yaw, required this.roll});
 
   /// Create from JSON
   factory HeadPose.fromJson(Map<String, dynamic> json) {
@@ -32,11 +28,7 @@ class HeadPose {
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
-    return {
-      'pitch': pitch,
-      'yaw': yaw,
-      'roll': roll,
-    };
+    return {'pitch': pitch, 'yaw': yaw, 'roll': roll};
   }
 
   @override

@@ -2,16 +2,16 @@
 class PerformanceMetrics {
   /// Frames per second
   final double fps;
-  
+
   /// Average processing time in milliseconds
   final double avgProcessingTimeMs;
-  
+
   /// Maximum processing time in milliseconds
   final double maxProcessingTimeMs;
-  
+
   /// Number of dropped frames
   final int droppedFrames;
-  
+
   /// Total frames processed
   final int totalFrames;
 
