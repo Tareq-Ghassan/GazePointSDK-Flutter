@@ -9,12 +9,9 @@ documentation: https://github.com/Tareq-Ghassan/GazePointSDK-Flutter#readme
 topics:
   - eye-tracking
   - gaze
-  - camera
+  - computer-vision
   - ml-kit
   - vision
-  - computer-vision
-  - opencv
-  - mediapipe
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
