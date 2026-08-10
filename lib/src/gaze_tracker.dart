@@ -23,12 +23,6 @@ import 'models/performance_metrics.dart';
 /// }
 /// ```
 class GazeTracker {
-  /// Creates a new [GazeTracker] instance.
-  ///
-  /// This is the primary interface for interacting with the gaze tracking SDK.
-  /// Call [initialize] before using any other methods.
-  GazeTracker();
-
   final GazepointSdkPlatform _platform = GazepointSdkPlatform.instance;
 
   bool _isInitialized = false;
