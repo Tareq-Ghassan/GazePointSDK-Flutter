@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.gazepoint.gazepoint_sdk_example"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

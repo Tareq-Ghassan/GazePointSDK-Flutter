@@ -30,7 +30,7 @@ flutter run -d android
 flutter run -d ios
 ```
 
-This example depends on the **local plugin** (`path: ../`), not pub.dev. App users should pin `gazepoint_sdk: ^3.0.3`.
+This example depends on the **local plugin** (`path: ../`), not pub.dev. After 3.0.4, app users should pin `gazepoint_sdk: ^3.0.4` (3.0.3 Android builds fail because JitPack has no `2.1.0` artifact).
 
 See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md) for the full matrix.
 
@@ -38,6 +38,8 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 
 ### Android
 - Minimum SDK version: 24 (Android 7.0)
+- compileSdk 37
+- JitPack (`https://jitpack.io`) in `android/build.gradle.kts` repositories
 - Camera permission required
 
 ### iOS

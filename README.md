@@ -35,7 +35,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  gazepoint_sdk: ^3.0.3
+  gazepoint_sdk: ^3.0.4
 ```
 
 Then install:
@@ -193,7 +193,33 @@ class _MyAppState extends State<MyApp> {
 
 ### Android
 
-**Minimum SDK:** API 24 (Android 7.0)
+**Minimum SDK:** API 24 (Android 7.0)  
+**compileSdk:** 37 (required by this plugin)
+
+The plugin pulls the native library from JitPack (`com.github.Tareq-Ghassan:GazePointSDK-Android:2.1.1`). Use **2.1.1**, not 2.1.0 — JitPack never produced a 2.1.0 artifact.
+
+In the **app** `android/build.gradle.kts` (or `build.gradle`):
+
+```kotlin
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+And `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    compileSdk = 37
+    defaultConfig {
+        minSdk = 24
+    }
+}
+```
 
 Camera permission is automatically declared by the plugin. Request it at runtime:
 
@@ -399,6 +425,10 @@ Expected performance metrics:
 
 ## 🔍 Troubleshooting
 
+### Gradle: Could not find GazePointSDK-Android:2.1.0
+
+JitPack **2.1.0** is `Error`. This plugin 3.0.4+ depends on **2.1.1**. Add `maven { url = uri("https://jitpack.io") }` to the app’s repositories and set `compileSdk = 37`.
+
 ### Camera Not Working
 
 **Android:**
@@ -478,7 +508,7 @@ Comprehensive examples for all platforms:
 - **[macOS Example](https://github.com/Tareq-Ghassan/GazePointSDK-macOS/tree/main/example)** - Native macOS app
 - **[Linux Example](https://github.com/Tareq-Ghassan/GazePointSDK-Linux/tree/main/example)** - Native Linux app
 
-How to run each one, including Flutter on every device: [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md). App users pin `gazepoint_sdk: ^3.0.3`.
+How to run each one, including Flutter on every device: [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md). App users pin `gazepoint_sdk: ^3.0.4`.
 
 ## 🤝 Contributing
 

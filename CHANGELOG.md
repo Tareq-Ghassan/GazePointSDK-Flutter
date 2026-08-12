@@ -1,3 +1,9 @@
+## 3.0.4
+
+* Depend on JitPack `GazePointSDK-Android:2.1.1`. Tag `2.1.0` never built on JitPack (`Error`), so Android apps using 3.0.3 fail with "Could not find ...:2.1.0".
+* Example app `compileSdk = 37` (plugin requires 37; Flutter's default was 36).
+* Example Gradle repositories include `https://jitpack.io`.
+
 ## 3.0.3
 
 * Stop tracking `pana-report.json` so `dart pub publish` is not blocked by a gitignored file.

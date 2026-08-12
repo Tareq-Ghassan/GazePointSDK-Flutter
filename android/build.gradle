@@ -1,5 +1,5 @@
 group = 'com.gazepoint.flutter'
-version = '3.0.3'
+version = '3.0.4'
 
 buildscript {
     repositories {
@@ -44,7 +44,7 @@ android {
 dependencies {
     // Native Android SDK is published independently on JitPack.
     // Bump this version only when the Flutter plugin should pick up a new Android release.
-    api 'com.github.Tareq-Ghassan:GazePointSDK-Android:2.1.0'
+    api 'com.github.Tareq-Ghassan:GazePointSDK-Android:2.1.1'
 
     implementation 'androidx.core:core-ktx:1.15.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
