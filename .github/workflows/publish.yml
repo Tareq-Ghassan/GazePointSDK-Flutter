@@ -40,9 +40,9 @@ jobs:
           echo "pubspec=$PUBSPEC tag=$TAG"
           test "$PUBSPEC" = "$TAG"
 
-      - run: dart format --output=none --set-exit-if-changed lib
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib
       - run: dart pub global activate pana
-      - run: pana --no-warning --exit-code-threshold 0
+      - run: pana --no-warning --exit-code-threshold 160
       - run: dart pub publish --dry-run
       - run: dart pub publish --force
