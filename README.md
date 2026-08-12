@@ -252,6 +252,8 @@ buildTypes {
 
 **Minimum Version:** iOS 16.0
 
+The **app** must also target iOS 16+. In `ios/Runner.xcodeproj` set `IPHONEOS_DEPLOYMENT_TARGET = 16.0` (Flutter’s default is 13.0, which fails SwiftPM with “gazepoint-sdk requires 16.0 but this target supports 13.0”).
+
 Flutter 3.44+ uses Swift Package Manager. Plugin sources live in `ios/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `gazepoint_sdk.podspec`.
 
 Add camera permission to `ios/Runner/Info.plist`:

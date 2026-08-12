@@ -44,7 +44,7 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Camera permission required
 
 ### iOS
-- Minimum iOS version: 16.0
+- Minimum iOS version: 16.0 (`IPHONEOS_DEPLOYMENT_TARGET` in `ios/Runner.xcodeproj`)
 - Camera permission required
 - Physical iPhone (camera). After a plugin SPM layout change, run `flutter clean` then `flutter run -d ios`.
 
