@@ -1,3 +1,11 @@
+## 3.0.2
+
+* Format `gazepoint_sdk_method_channel.dart` so Pana static analysis is 50/50 (160/160 overall).
+* Document implicit constructors on `GazeTracker` and `MethodChannelGazepointSdk`.
+* Consume the published Android SDK from JitPack (`GazePointSDK-Android:2.1.0`) instead of vendoring Kotlin sources. An Android-only release no longer requires copying files into this plugin.
+* iOS still ships a source snapshot under `ios/Classes/GazePointSDK` so CocoaPods apps keep working; releasing GazePointSDK-iOS does not change this plugin until that snapshot is updated.
+* Add plugin-local publish/Pana workflows and a Flutter issue template.
+
 ## 3.0.1
 
 ### Quality Improvements

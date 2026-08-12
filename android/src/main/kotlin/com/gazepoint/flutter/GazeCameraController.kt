@@ -20,7 +20,8 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import java.util.concurrent.Executors
 
 /**
- * Headless CameraX + ML Kit pipeline that feeds [GazeTracker] from the Android SDK.
+ * Headless CameraX + ML Kit pipeline that feeds [GazeTracker] from
+ * GazePointSDK-Android (JitPack).
  */
 class GazeCameraController(
     private val context: Context,
