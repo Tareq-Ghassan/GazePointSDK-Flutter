@@ -482,6 +482,7 @@ The plugin and the host app must both use JVM 17. In `android/app/build.gradle.k
 - Verify `Info.plist` has camera usage description
 - Check System Preferences → Privacy → Camera
 - Allow permission when prompted
+- If the app runs but the gaze indicator never moves and the console shows `Map<Object?, Object?>` / `Map<String, dynamic>`, you are on a plugin older than 3.0.4’s event-channel decode fix. Use this repo’s plugin (`path: ../` in the example), not a stale pub.dev build.
 
 **Web:**
 - Use HTTPS (or localhost for testing)

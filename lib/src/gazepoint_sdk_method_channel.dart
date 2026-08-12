@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'gazepoint_sdk_platform_interface.dart';
 import 'models/gaze_calibration_point.dart';
 import 'models/gaze_result.dart';
+import 'models/json_map.dart';
 import 'models/performance_metrics.dart';
 
 /// An implementation of [GazepointSdkPlatform] that uses method channels.
@@ -53,7 +54,7 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
     try {
       final result = await methodChannel.invokeMethod<Map>('getLatestGaze');
       if (result == null) return null;
-      return GazeResult.fromJson(Map<String, dynamic>.from(result));
+      return GazeResult.fromJson(jsonMap(result));
     } on PlatformException catch (e) {
       debugPrint('Failed to get latest gaze: ${e.message}');
       return null;
@@ -89,7 +90,7 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
       if (result == null) {
         throw Exception('No performance metrics available');
       }
-      return PerformanceMetrics.fromJson(Map<String, dynamic>.from(result));
+      return PerformanceMetrics.fromJson(jsonMap(result));
     } on PlatformException catch (e) {
       throw Exception('Failed to get performance metrics: ${e.message}');
     }
@@ -100,7 +101,7 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
     _gazeStream ??= eventChannel.receiveBroadcastStream().where((event) {
       return event is Map;
     }).map((event) {
-      return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
+      return GazeResult.fromJson(jsonMap(event));
     });
     return _gazeStream!;
   }

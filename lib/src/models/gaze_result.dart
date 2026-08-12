@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'head_pose.dart';
+import 'json_map.dart';
 
 /// Result of gaze point calculation
 class GazeResult {
@@ -33,17 +34,18 @@ class GazeResult {
     required this.timestamp,
   });
 
-  /// Create from JSON
-  factory GazeResult.fromJson(Map<String, dynamic> json) {
+  /// Create from JSON (including platform-channel maps from iOS/macOS).
+  factory GazeResult.fromJson(Map<dynamic, dynamic> json) {
+    final map = jsonMap(json);
     return GazeResult(
       gazePoint: Offset(
-        (json['gazePointX'] as num).toDouble(),
-        (json['gazePointY'] as num).toDouble(),
+        (map['gazePointX'] as num).toDouble(),
+        (map['gazePointY'] as num).toDouble(),
       ),
-      confidence: (json['confidence'] as num).toDouble(),
-      isBlinking: json['isBlinking'] as bool,
-      headPose: HeadPose.fromJson(json['headPose'] as Map<String, dynamic>),
-      timestamp: json['timestamp'] as int,
+      confidence: (map['confidence'] as num).toDouble(),
+      isBlinking: map['isBlinking'] as bool,
+      headPose: HeadPose.fromJson(jsonMap(map['headPose'])),
+      timestamp: (map['timestamp'] as num).toInt(),
     );
   }
 

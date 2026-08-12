@@ -1,3 +1,5 @@
+import 'json_map.dart';
+
 /// Performance monitoring metrics
 class PerformanceMetrics {
   /// Frames per second
@@ -27,14 +29,15 @@ class PerformanceMetrics {
     required this.totalFrames,
   });
 
-  /// Create from JSON
-  factory PerformanceMetrics.fromJson(Map<String, dynamic> json) {
+  /// Create from JSON (including platform-channel maps from iOS/macOS).
+  factory PerformanceMetrics.fromJson(Map<dynamic, dynamic> json) {
+    final map = jsonMap(json);
     return PerformanceMetrics(
-      fps: (json['fps'] as num).toDouble(),
-      avgProcessingTimeMs: (json['avgProcessingTimeMs'] as num).toDouble(),
-      maxProcessingTimeMs: (json['maxProcessingTimeMs'] as num).toDouble(),
-      droppedFrames: json['droppedFrames'] as int,
-      totalFrames: json['totalFrames'] as int,
+      fps: (map['fps'] as num).toDouble(),
+      avgProcessingTimeMs: (map['avgProcessingTimeMs'] as num).toDouble(),
+      maxProcessingTimeMs: (map['maxProcessingTimeMs'] as num).toDouble(),
+      droppedFrames: (map['droppedFrames'] as num).toInt(),
+      totalFrames: (map['totalFrames'] as num).toInt(),
     );
   }
 

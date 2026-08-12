@@ -1,3 +1,5 @@
+import 'json_map.dart';
+
 /// Head pose information (orientation in degrees)
 class HeadPose {
   /// Pitch angle (nodding up and down)
@@ -17,12 +19,13 @@ class HeadPose {
   /// - [roll]: Tilting left (-) and right (+)
   const HeadPose({required this.pitch, required this.yaw, required this.roll});
 
-  /// Create from JSON
-  factory HeadPose.fromJson(Map<String, dynamic> json) {
+  /// Create from JSON (including platform-channel maps from iOS/macOS).
+  factory HeadPose.fromJson(Map<dynamic, dynamic> json) {
+    final map = jsonMap(json);
     return HeadPose(
-      pitch: (json['pitch'] as num).toDouble(),
-      yaw: (json['yaw'] as num).toDouble(),
-      roll: (json['roll'] as num).toDouble(),
+      pitch: (map['pitch'] as num).toDouble(),
+      yaw: (map['yaw'] as num).toDouble(),
+      roll: (map['roll'] as num).toDouble(),
     );
   }
 

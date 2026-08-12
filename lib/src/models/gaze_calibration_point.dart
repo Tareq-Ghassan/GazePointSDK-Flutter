@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'json_map.dart';
+
 /// A calibration sample pairing an expected screen point with the measured gaze point.
 class GazeCalibrationPoint {
   /// Where the user was asked to look (screen coordinates).
@@ -29,9 +31,10 @@ class GazeCalibrationPoint {
   ///
   /// The [json] parameter should contain 'expected' and 'actual' keys,
   /// each with x and y coordinate values.
-  factory GazeCalibrationPoint.fromJson(Map<String, dynamic> json) {
-    final expected = json['expected'] as Map<String, dynamic>;
-    final actual = json['actual'] as Map<String, dynamic>;
+  factory GazeCalibrationPoint.fromJson(Map<dynamic, dynamic> json) {
+    final map = jsonMap(json);
+    final expected = jsonMap(map['expected']);
+    final actual = jsonMap(map['actual']);
     return GazeCalibrationPoint(
       expected: Offset(
         (expected['x'] as num).toDouble(),
