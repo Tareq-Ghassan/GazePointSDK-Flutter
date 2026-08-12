@@ -4,6 +4,13 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required for eye tracking</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Allow Flutter tools on this Mac to connect and debug the app over the local network.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartVmService._tcp</string>
+		<string>_dartobservatory._tcp</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

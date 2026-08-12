@@ -47,6 +47,7 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Minimum iOS version: 16.0 (`IPHONEOS_DEPLOYMENT_TARGET` in `ios/Runner.xcodeproj`)
 - Camera permission required
 - Physical iPhone (camera). After a plugin SPM layout change, run `flutter clean` then `flutter run -d ios`.
+- Prefer a **USB** cable. Wireless debug (`Tareq’s iPhone (wireless)`) waits for the Dart VM Service on the local network. A white screen plus “Dart VM Service was not discovered” means the debugger never attached — the gaze SDK has not started yet. Tap **Allow** on Local Network (`Settings → Gazepoint Sdk Example → Local Network`). If you tapped Don’t Allow, uninstall the app and run again. To confirm the UI without a debugger: `flutter run -d ios --release`.
 
 ### Web
 - Chrome (or another WebRTC browser). Allow the camera when prompted.
@@ -67,6 +68,13 @@ Make sure to add camera permissions in your platform-specific configuration file
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>Camera access is required for eye tracking</string>
+<key>NSLocalNetworkUsageDescription</key>
+<string>Allow Flutter tools on this Mac to connect and debug the app over the local network.</string>
+<key>NSBonjourServices</key>
+<array>
+  <string>_dartVmService._tcp</string>
+  <string>_dartobservatory._tcp</string>
+</array>
 ```
 
 ## Learn More

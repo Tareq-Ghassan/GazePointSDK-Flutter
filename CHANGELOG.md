@@ -8,6 +8,7 @@
 * Put iOS Swift sources inside `ios/gazepoint_sdk/Sources/gazepoint_sdk` so Swift Package Manager can resolve the plugin (Flutter 3.44+). `path: "../Classes"` is outside the package root and Xcode rejects it.
 * Example iOS `IPHONEOS_DEPLOYMENT_TARGET` is 16.0 (plugin minimum). Flutter’s generated 13.0 target cannot link `gazepoint-sdk`.
 * Add `lib/gazepoint_sdk_web.dart` and `flutter_web_plugins` so `flutter run -d chrome` compiles. Web tracking uses the camera plus MediaPipe Face Mesh from jsDelivr.
+* Example iOS `Info.plist` advertises `_dartVmService._tcp` and asks for Local Network so wireless debug can attach. Without that, `flutter run -d ios` on Wi‑Fi stays on a white launch screen until the Dart VM Service times out.
 
 ## 3.0.3
 

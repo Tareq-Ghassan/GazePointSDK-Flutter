@@ -263,6 +263,20 @@ Add camera permission to `ios/Runner/Info.plist`:
 <string>Camera access is required for eye tracking and gaze detection</string>
 ```
 
+Wireless `flutter run -d ios` needs Local Network so the Dart VM Service can attach. Without it the app stays on a white launch screen. The example also declares:
+
+```xml
+<key>NSLocalNetworkUsageDescription</key>
+<string>Allow Flutter tools on this Mac to connect and debug the app over the local network.</string>
+<key>NSBonjourServices</key>
+<array>
+  <string>_dartVmService._tcp</string>
+  <string>_dartobservatory._tcp</string>
+</array>
+```
+
+Prefer USB on iOS 26. Tap **Allow** when asked. `flutter run -d ios --release` runs without the debugger.
+
 ### Web
 
 **Requirements:** Modern browser with WebRTC, Dart SDK `>=3.6.0`, and network access to load MediaPipe Face Mesh from jsDelivr.
