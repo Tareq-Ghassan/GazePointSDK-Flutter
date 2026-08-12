@@ -10,3 +10,4 @@ build/
 *.iml
 pubspec.lock
 pana-report.json
+.swiftpm/

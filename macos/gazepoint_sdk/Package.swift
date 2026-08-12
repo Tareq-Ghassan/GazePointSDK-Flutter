@@ -1,21 +1,23 @@
-// swift-tools-version:5.9
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
     name: "gazepoint_sdk",
     platforms: [
-        .macOS(.v12)
+        .macOS("12.0")
     ],
     products: [
         .library(name: "gazepoint-sdk", targets: ["gazepoint_sdk"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(name: "FlutterFramework", path: "../FlutterFramework")
+    ],
     targets: [
         .target(
             name: "gazepoint_sdk",
-            dependencies: [],
-            path: "../Classes",
-            resources: []
+            dependencies: [
+                .product(name: "FlutterFramework", package: "FlutterFramework")
+            ]
         )
     ]
 )

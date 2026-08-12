@@ -5,7 +5,7 @@ import 'models/performance_metrics.dart';
 
 /// Main GazeTracker class for Flutter applications.
 ///
-/// Wraps Android and iOS via platform channels, and web via
+/// Wraps Android, iOS, and macOS via platform channels, and web via
 /// `GazepointSdkWeb` (camera + MediaPipe Face Mesh).
 ///
 /// Example usage:

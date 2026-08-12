@@ -53,7 +53,12 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Chrome (or another WebRTC browser). Allow the camera when prompted.
 - `localhost` is a secure origin; HTTPS is not required for `flutter run -d chrome`.
 - MediaPipe Face Mesh loads from jsDelivr — needs network access.
-- `flutter run -d macos` / Windows / Linux still fail until those plugin implementations exist.
+
+### macOS
+- Minimum macOS version: 12.0 (`MACOSX_DEPLOYMENT_TARGET` in `macos/Runner.xcodeproj`)
+- Camera permission + `com.apple.security.device.camera` in entitlements (already set)
+- Allow Camera in System Settings if prompted. After a plugin SPM layout change, run `flutter clean` then `flutter run -d macos`.
+- Windows / Linux still fail until those plugin implementations exist.
 
 ## Permissions
 
@@ -75,6 +80,12 @@ Make sure to add camera permissions in your platform-specific configuration file
   <string>_dartVmService._tcp</string>
   <string>_dartobservatory._tcp</string>
 </array>
+```
+
+### macOS (`macos/Runner/Info.plist`)
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Camera access is required for eye tracking</string>
 ```
 
 ## Learn More

@@ -24,7 +24,7 @@ Advanced cross-platform Flutter plugin for **real-time eye tracking and gaze poi
 | 🍎 iOS | ✅ Full | Vision Framework + AVFoundation | iOS 16.0+ |
 | 🌐 Web | ✅ Full | MediaPipe Face Mesh (jsDelivr CDN) | Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ |
 | 🪟 Windows | ⚠️ Declared | Plugin class not implemented yet | Windows 10+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) |
-| 🖥️ macOS | ⚠️ Declared | Plugin sources not implemented yet | macOS 12.0+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-macOS) |
+| 🖥️ macOS | ✅ Full | Vision Framework + AVFoundation | macOS 12.0+ |
 | 🐧 Linux | ⚠️ Declared | Plugin class not implemented yet | Ubuntu 20.04+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) |
 
 **Note:** Camera permission is required on all platforms.
@@ -307,13 +307,23 @@ The Flutter Windows plugin class is **not implemented** yet (`pluginClass: Gazep
 
 **Minimum Version:** macOS 12.0 (Monterey)
 
-The Flutter macOS plugin sources are **not implemented** yet (`macos/gazepoint_sdk/Package.swift` still points outside the package root). Use the [native macOS SDK](https://github.com/Tareq-Ghassan/GazePointSDK-macOS) until then.
+The **app** must also target macOS 12+. In `macos/Runner.xcodeproj` set `MACOSX_DEPLOYMENT_TARGET = 12.0` (Flutter’s default is 10.15, which fails SwiftPM with “gazepoint-sdk requires 12.0”).
 
-Add camera permission to `macos/Runner/Info.plist` when the plugin exists:
+Plugin sources live in `macos/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `macos/gazepoint_sdk.podspec`. This is a Vision + AVFoundation implementation, not a wrap of GazePointSDK-macOS.
+
+Add camera permission to `macos/Runner/Info.plist`:
 
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>Camera access is required for eye tracking and gaze detection</string>
+```
+
+Enable camera in **System Settings → Privacy & Security → Camera**. Sandboxed apps also need `com.apple.security.device.camera` in the entitlements (the example already has it).
+
+```bash
+cd example
+flutter pub get
+flutter run -d macos
 ```
 
 ### Linux
@@ -498,14 +508,14 @@ The plugin and the host app must both use JVM 17. In `android/app/build.gradle.k
 
 ## 🏗️ Architecture
 
-GazePoint SDK uses native implementations for Android and iOS. Web is a Dart implementation (MediaPipe Face Mesh from jsDelivr), not a wrap of GazePointSDK-Web. Windows / macOS / Linux plugin files are not in this repo yet.
+GazePoint SDK uses native implementations for Android, iOS, and macOS. Web is a Dart implementation (MediaPipe Face Mesh from jsDelivr), not a wrap of GazePointSDK-Web. Windows / Linux plugin files are not in this repo yet.
 
 ```
 Flutter App
     ↓
 GazePoint Flutter Plugin
     ↓
-Android / iOS: platform channels → native SDKs (ML Kit, Vision)
+Android / iOS / macOS: platform channels → Vision / ML Kit / AVFoundation
 Web: Dart JS interop → getUserMedia + MediaPipe Face Mesh (CDN)
 ```
 
