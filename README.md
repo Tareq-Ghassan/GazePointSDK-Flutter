@@ -35,7 +35,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  gazepoint_sdk: ^3.0.0
+  gazepoint_sdk: ^3.0.3
 ```
 
 Then install:
@@ -477,6 +477,8 @@ Comprehensive examples for all platforms:
 - **[Windows Example](https://github.com/Tareq-Ghassan/GazePointSDK-Windows/tree/main/example)** - Native Windows app
 - **[macOS Example](https://github.com/Tareq-Ghassan/GazePointSDK-macOS/tree/main/example)** - Native macOS app
 - **[Linux Example](https://github.com/Tareq-Ghassan/GazePointSDK-Linux/tree/main/example)** - Native Linux app
+
+How to run each one, including Flutter on every device: [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md). App users pin `gazepoint_sdk: ^3.0.3`.
 
 ## 🤝 Contributing
 

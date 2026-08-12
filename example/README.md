@@ -23,8 +23,16 @@ This example app shows the basic usage of the GazePoint SDK:
 ```bash
 cd example
 flutter pub get
-flutter run
+flutter run                 # picks a connected device
+flutter run -d macos
+flutter run -d chrome
+flutter run -d android
+flutter run -d ios
 ```
+
+This example depends on the **local plugin** (`path: ../`), not pub.dev. App users should pin `gazepoint_sdk: ^3.0.3`.
+
+See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md) for the full matrix.
 
 ## Platform Requirements
 

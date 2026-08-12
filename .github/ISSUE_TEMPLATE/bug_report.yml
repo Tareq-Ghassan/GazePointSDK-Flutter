@@ -34,6 +34,6 @@ body:
     id: version
     attributes:
       label: gazepoint_sdk version
-      placeholder: "3.0.2"
+      placeholder: "3.0.3"
     validations:
       required: true

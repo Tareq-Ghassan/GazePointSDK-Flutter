@@ -5,7 +5,7 @@ name: Publish Flutter plugin
 #   Repository: Tareq-Ghassan/GazePointSDK-Flutter
 #   Tag pattern: v{{version}}
 #
-#   git tag v3.0.2 && git push origin v3.0.2
+#   git tag v3.0.3 && git push origin v3.0.3
 
 on:
   push:
