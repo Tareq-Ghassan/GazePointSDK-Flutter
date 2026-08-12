@@ -52,7 +52,7 @@ class GazeTracker {
   /// Start gaze tracking.
   ///
   /// Requires [initialize] to be called first.
-  /// Requires camera permission to be granted.
+  /// Requests camera permission if it has not been granted yet.
   Future<void> startTracking() async {
     if (!_isInitialized) {
       throw StateError('GazeTracker not initialized. Call initialize() first.');
@@ -63,7 +63,12 @@ class GazeTracker {
     }
 
     if (!await hasCameraPermission()) {
-      throw StateError('Camera permission not granted');
+      final granted = await requestCameraPermission();
+      if (!granted) {
+        throw StateError(
+          'Camera permission not granted. Allow camera for this app in system settings, then try again.',
+        );
+      }
     }
 
     await _platform.startTracking();

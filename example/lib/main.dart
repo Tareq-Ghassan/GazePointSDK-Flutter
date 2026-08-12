@@ -62,9 +62,23 @@ class _GazeTrackingPageState extends State<GazeTrackingPage> {
 
   Future<void> _startTracking() async {
     try {
+      setState(() {
+        _statusMessage = 'Requesting camera permission...';
+      });
+
+      final granted = await _gazeTracker.requestCameraPermission();
+      if (!granted) {
+        setState(() {
+          _statusMessage =
+              'Camera permission denied. Open the emulator/device settings for this app, enable Camera, then tap Start Tracking again.';
+        });
+        return;
+      }
+
       await _gazeTracker.startTracking();
 
       _gazeTracker.gazeStream.listen((result) {
+        if (!mounted) return;
         setState(() {
           _gazePoint = result.gazePoint;
           _confidence = result.confidence;
@@ -75,6 +89,7 @@ class _GazeTrackingPageState extends State<GazeTrackingPage> {
       });
 
       setState(() {
+        _isTracking = true;
         _statusMessage = 'Tracking started';
       });
     } catch (e) {

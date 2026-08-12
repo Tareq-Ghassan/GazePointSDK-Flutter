@@ -4,6 +4,7 @@
 * Example app `compileSdk = 37` (plugin requires 37; Flutter's default was 36).
 * Example Gradle repositories include `https://jitpack.io`.
 * Pin the plugin Kotlin `jvmTarget` to 17 so it matches Java 17 (AGP 9 / JDK 25 otherwise compiles Kotlin as 25 and the Android example fails).
+* `startTracking()` requests camera permission when it is missing. The example Start button does the same and explains how to enable Camera if the user denied the prompt.
 
 ## 3.0.3
 

@@ -30,7 +30,7 @@ flutter run -d android
 flutter run -d ios
 ```
 
-This example depends on the **local plugin** (`path: ../`), not pub.dev. After 3.0.4, app users should pin `gazepoint_sdk: ^3.0.4` (3.0.3 Android builds fail because JitPack has no `2.1.0` artifact).
+Tap **Start Tracking** — the app requests camera permission. On the Android emulator, allow Camera when prompted (Extended controls → Camera can use the webcam or a virtual scene). If you already denied it, enable Camera in the app’s system settings.
 
 See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/blob/main/TESTING.md) for the full matrix.
 
