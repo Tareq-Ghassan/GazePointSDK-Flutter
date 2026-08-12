@@ -44,5 +44,7 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib
       - run: dart pub global activate pana
       - run: pana --no-warning --exit-code-threshold 160
+      # Pana rewrites analysis_options.yaml; pub publish --dry-run fails if the tree is dirty.
+      - run: git restore --worktree --source=HEAD -- .
       - run: dart pub publish --dry-run
       - run: dart pub publish --force

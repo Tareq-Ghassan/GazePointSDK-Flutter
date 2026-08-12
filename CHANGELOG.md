@@ -1,3 +1,8 @@
+## 3.0.3
+
+* Stop tracking `pana-report.json` so `dart pub publish` is not blocked by a gitignored file.
+* Restore the working tree after Pana in CI so publish dry-run sees a clean checkout.
+
 ## 3.0.2
 
 * Format `gazepoint_sdk_method_channel.dart` so Pana static analysis is 50/50 (160/160 overall).
