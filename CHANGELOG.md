@@ -5,6 +5,7 @@
 * Example Gradle repositories include `https://jitpack.io`.
 * Pin the plugin Kotlin `jvmTarget` to 17 so it matches Java 17 (AGP 9 / JDK 25 otherwise compiles Kotlin as 25 and the Android example fails).
 * `startTracking()` requests camera permission when it is missing. The example Start button does the same and explains how to enable Camera if the user denied the prompt.
+* Put iOS Swift sources inside `ios/gazepoint_sdk/Sources/gazepoint_sdk` so Swift Package Manager can resolve the plugin (Flutter 3.44+). `path: "../Classes"` is outside the package root and Xcode rejects it.
 
 ## 3.0.3
 

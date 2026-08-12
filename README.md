@@ -252,6 +252,8 @@ buildTypes {
 
 **Minimum Version:** iOS 16.0
 
+Flutter 3.44+ uses Swift Package Manager. Plugin sources live in `ios/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `gazepoint_sdk.podspec`.
+
 Add camera permission to `ios/Runner/Info.plist`:
 
 ```xml

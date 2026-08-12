@@ -1,12 +1,10 @@
 #
-# Flutter iOS plugin. Native gaze math lives under Classes/GazePointSDK
-# (a snapshot of GazePointSDK-iOS). Releasing the iOS SDK repo does not
-# require a Flutter change; bump this plugin only when you want pub.dev
-# users to pick up a new iOS snapshot.
+# Flutter iOS plugin. Native gaze math lives under
+# gazepoint_sdk/Sources/gazepoint_sdk/GazePointSDK (a snapshot of GazePointSDK-iOS).
 #
 Pod::Spec.new do |s|
   s.name             = 'gazepoint_sdk'
-  s.version          = '3.0.2'
+  s.version          = '3.0.4'
   s.summary          = 'Flutter plugin for GazePoint SDK'
   s.description      = <<-DESC
     Cross-platform Flutter plugin for eye tracking and gaze point detection.
@@ -16,7 +14,7 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Tareq Abu Saleh' => 'https://github.com/Tareq-Ghassan' }
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*'
+  s.source_files     = 'gazepoint_sdk/Sources/gazepoint_sdk/**/*'
   s.dependency 'Flutter'
   s.platform = :ios, '16.0'
   s.frameworks       = 'Vision', 'UIKit', 'AVFoundation', 'CoreMedia'

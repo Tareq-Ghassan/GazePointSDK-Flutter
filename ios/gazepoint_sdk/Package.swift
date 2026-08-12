@@ -1,22 +1,22 @@
-// swift-tools-version:5.9
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
     name: "gazepoint_sdk",
     platforms: [
-        .iOS(.v16)
+        .iOS("16.0")
     ],
     products: [
         .library(name: "gazepoint-sdk", targets: ["gazepoint_sdk"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(name: "FlutterFramework", path: "../FlutterFramework")
+    ],
     targets: [
         .target(
             name: "gazepoint_sdk",
-            dependencies: [],
-            path: "../Classes",
-            resources: [
-                .process("gazepoint_sdk/PrivacyInfo.xcprivacy")
+            dependencies: [
+                .product(name: "FlutterFramework", package: "FlutterFramework")
             ]
         )
     ]
