@@ -308,7 +308,7 @@ Allow the camera when Chrome prompts. If MediaPipe fails to load, check the netw
 
 **Minimum Version:** Windows 10 (build 1903+)
 
-The Flutter Windows plugin class is **not implemented** yet (`pluginClass: GazepointSdkPluginWindows` is declared in `pubspec.yaml` with no sources). Use the [native Windows SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) until then.
+The Flutter Windows plugin class is **not implemented** yet (`pluginClass: GazepointSdkPluginWindows` is declared in `pubspec.yaml` with no sources). The [native Windows SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) is still a TODO stub (`InitializeAsync` does not open a camera), so there is nothing to wrap yet.
 
 ### macOS
 
@@ -340,7 +340,7 @@ flutter run -d macos
 - OpenCV 4.x
 - V4L2 (Video4Linux2)
 
-The Flutter Linux plugin class is **not implemented** yet. Use the [native Linux SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) until then.
+The Flutter Linux plugin class is **not implemented** yet. The [native Linux SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) has a header but no `src/*.cpp` in the repo, so there is nothing to wrap yet.
 
 ## 📖 API Reference
 

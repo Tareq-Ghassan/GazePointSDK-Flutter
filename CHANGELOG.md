@@ -9,7 +9,7 @@
 * Example iOS `IPHONEOS_DEPLOYMENT_TARGET` is 16.0 on the Runner **target** and in `ios/Flutter/*.xcconfig`. Project-level 16.0 is not enough: Flutter still generates `FlutterGeneratedPluginSwiftPackage` at 13.0 until it reads the app target (`flutter build ios --config-only`).
 * Add `lib/gazepoint_sdk_web.dart` and `flutter_web_plugins` so `flutter run -d chrome` compiles. Web tracking uses the camera plus MediaPipe Face Mesh from jsDelivr.
 * Example iOS `Info.plist` advertises `_dartVmService._tcp` and asks for Local Network so wireless debug can attach. Without that, `flutter run -d ios` on Wi‑Fi stays on a white launch screen until the Dart VM Service times out.
-* Decode iOS/macOS event-channel maps (`Map<Object?, Object?>`) so gaze results are not dropped. Nested `headPose` cannot be cast to `Map<String, dynamic>` with a shallow copy.
+* Decode iOS/macOS event-channel maps (`Map<Object?, Object?>`) so gaze results are not dropped. Nested `headPose` cannot be cast to `Map<String, dynamic>` with a shallow copy. The same decoder is what Windows/Linux will use once those plugins exist.
 
 ## 3.0.3
 
