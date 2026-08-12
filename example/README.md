@@ -44,9 +44,10 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Camera permission required
 
 ### iOS
-- Minimum iOS version: 16.0 (`IPHONEOS_DEPLOYMENT_TARGET` in `ios/Runner.xcodeproj`)
+- Minimum iOS version: 16.0 on the **Runner target** and in `ios/Flutter/Debug.xcconfig` / `Release.xcconfig` (project-level alone is not enough for SwiftPM).
 - Camera permission required
 - Physical iPhone (camera). After a plugin SPM layout change, run `flutter clean` then `flutter run -d ios`.
+- If Xcode says gazepoint-sdk requires 16.0 but the target supports 13.0: `flutter clean && flutter build ios --config-only`, then run again.
 - Prefer a **USB** cable. Wireless debug (`Tareq’s iPhone (wireless)`) waits for the Dart VM Service on the local network. A white screen plus “Dart VM Service was not discovered” means the debugger never attached — the gaze SDK has not started yet. Tap **Allow** on Local Network (`Settings → Gazepoint Sdk Example → Local Network`). If you tapped Don’t Allow, uninstall the app and run again. To confirm the UI without a debugger: `flutter run -d ios --release`.
 
 ### Web

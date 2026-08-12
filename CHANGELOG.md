@@ -6,7 +6,7 @@
 * Pin the plugin Kotlin `jvmTarget` to 17 so it matches Java 17 (AGP 9 / JDK 25 otherwise compiles Kotlin as 25 and the Android example fails).
 * `startTracking()` requests camera permission when it is missing. The example Start button does the same and explains how to enable Camera if the user denied the prompt.
 * Put iOS Swift sources inside `ios/gazepoint_sdk/Sources/gazepoint_sdk` so Swift Package Manager can resolve the plugin (Flutter 3.44+). `path: "../Classes"` is outside the package root and Xcode rejects it.
-* Example iOS `IPHONEOS_DEPLOYMENT_TARGET` is 16.0 (plugin minimum). Flutter’s generated 13.0 target cannot link `gazepoint-sdk`.
+* Example iOS `IPHONEOS_DEPLOYMENT_TARGET` is 16.0 on the Runner **target** and in `ios/Flutter/*.xcconfig`. Project-level 16.0 is not enough: Flutter still generates `FlutterGeneratedPluginSwiftPackage` at 13.0 until it reads the app target (`flutter build ios --config-only`).
 * Add `lib/gazepoint_sdk_web.dart` and `flutter_web_plugins` so `flutter run -d chrome` compiles. Web tracking uses the camera plus MediaPipe Face Mesh from jsDelivr.
 * Example iOS `Info.plist` advertises `_dartVmService._tcp` and asks for Local Network so wireless debug can attach. Without that, `flutter run -d ios` on Wi‑Fi stays on a white launch screen until the Dart VM Service times out.
 * Put macOS Swift sources inside `macos/gazepoint_sdk/Sources/gazepoint_sdk` so Swift Package Manager can resolve the plugin. `path: "../Classes"` is outside the package root and Xcode rejects it. Example `MACOSX_DEPLOYMENT_TARGET` is 12.0.

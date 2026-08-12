@@ -252,7 +252,14 @@ buildTypes {
 
 **Minimum Version:** iOS 16.0
 
-The **app** must also target iOS 16+. In `ios/Runner.xcodeproj` set `IPHONEOS_DEPLOYMENT_TARGET = 16.0` (Flutter’s default is 13.0, which fails SwiftPM with “gazepoint-sdk requires 16.0 but this target supports 13.0”).
+The **app** must also target iOS 16+. Set `IPHONEOS_DEPLOYMENT_TARGET = 16.0` on the **Runner target** (not only the project) and in `ios/Flutter/Debug.xcconfig` / `Release.xcconfig`. Flutter generates `FlutterGeneratedPluginSwiftPackage` at iOS 13.0; it only bumps that package after it reads the app target. If you still see “gazepoint-sdk requires 16.0 but this target supports 13.0”:
+
+```bash
+cd example
+flutter clean
+flutter build ios --config-only
+flutter run -d ios
+```
 
 Flutter 3.44+ uses Swift Package Manager. Plugin sources live in `ios/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `gazepoint_sdk.podspec`.
 
