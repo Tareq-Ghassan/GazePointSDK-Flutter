@@ -39,6 +39,7 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 ### Android
 - Minimum SDK version: 24 (Android 7.0)
 - compileSdk 37
+- Java/Kotlin JVM target 17 (not the JDK 25 default)
 - JitPack (`https://jitpack.io`) in `android/build.gradle.kts` repositories
 - Camera permission required
 

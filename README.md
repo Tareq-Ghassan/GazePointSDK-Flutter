@@ -215,8 +215,18 @@ And `android/app/build.gradle.kts`:
 ```kotlin
 android {
     compileSdk = 37
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
     defaultConfig {
         minSdk = 24
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 ```
@@ -428,6 +438,10 @@ Expected performance metrics:
 ### Gradle: Could not find GazePointSDK-Android:2.1.0
 
 JitPack **2.1.0** is `Error`. This plugin 3.0.4+ depends on **2.1.1**. Add `maven { url = uri("https://jitpack.io") }` to the app’s repositories and set `compileSdk = 37`.
+
+### Gradle: Inconsistent JVM-target (Java 17 vs Kotlin 25)
+
+The plugin and the host app must both use JVM 17. In `android/app/build.gradle.kts` set `compileOptions` to `VERSION_17` and `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }`. Do not leave Kotlin on the JDK default (25 with current Android Studio / Gradle 9).
 
 ### Camera Not Working
 
