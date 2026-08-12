@@ -5,7 +5,8 @@ import 'models/performance_metrics.dart';
 
 /// Main GazeTracker class for Flutter applications.
 ///
-/// Wraps the native Android / iOS GazePoint SDKs via platform channels.
+/// Wraps Android and iOS via platform channels, and web via
+/// `GazepointSdkWeb` (camera + MediaPipe Face Mesh).
 ///
 /// Example usage:
 /// ```dart
@@ -23,7 +24,7 @@ import 'models/performance_metrics.dart';
 /// }
 /// ```
 class GazeTracker {
-  /// Creates a gaze tracker that talks to the native GazePoint SDKs.
+  /// Creates a gaze tracker that talks to the current platform implementation.
   GazeTracker();
 
   final GazepointSdkPlatform _platform = GazepointSdkPlatform.instance;

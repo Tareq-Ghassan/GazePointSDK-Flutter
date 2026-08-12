@@ -48,6 +48,12 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Camera permission required
 - Physical iPhone (camera). After a plugin SPM layout change, run `flutter clean` then `flutter run -d ios`.
 
+### Web
+- Chrome (or another WebRTC browser). Allow the camera when prompted.
+- `localhost` is a secure origin; HTTPS is not required for `flutter run -d chrome`.
+- MediaPipe Face Mesh loads from jsDelivr — needs network access.
+- `flutter run -d macos` / Windows / Linux still fail until those plugin implementations exist.
+
 ## Permissions
 
 Make sure to add camera permissions in your platform-specific configuration files:

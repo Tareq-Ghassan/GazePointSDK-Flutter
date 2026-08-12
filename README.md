@@ -22,10 +22,10 @@ Advanced cross-platform Flutter plugin for **real-time eye tracking and gaze poi
 |----------|---------|------------|-------------|
 | 🤖 Android | ✅ Full | ML Kit Face Detection + CameraX | API 24+ |
 | 🍎 iOS | ✅ Full | Vision Framework + AVFoundation | iOS 16.0+ |
-| 🌐 Web | ✅ Full | MediaPipe Face Mesh + TensorFlow.js | Modern browsers |
-| 🪟 Windows | ✅ Full | Windows.Media.FaceAnalysis + ML.NET | Windows 10+ |
-| 🖥️ macOS | ✅ Full | Vision Framework + AVFoundation | macOS 12.0+ |
-| 🐧 Linux | ✅ Full | OpenCV + dlib + V4L2 | Ubuntu 20.04+ |
+| 🌐 Web | ✅ Full | MediaPipe Face Mesh (jsDelivr CDN) | Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ |
+| 🪟 Windows | ⚠️ Declared | Plugin class not implemented yet | Windows 10+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) |
+| 🖥️ macOS | ⚠️ Declared | Plugin sources not implemented yet | macOS 12.0+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-macOS) |
+| 🐧 Linux | ⚠️ Declared | Plugin class not implemented yet | Ubuntu 20.04+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) |
 
 **Note:** Camera permission is required on all platforms.
 
@@ -265,13 +265,17 @@ Add camera permission to `ios/Runner/Info.plist`:
 
 ### Web
 
-**Requirements:** Modern browser with WebRTC support
+**Requirements:** Modern browser with WebRTC, Dart SDK `>=3.6.0`, and network access to load MediaPipe Face Mesh from jsDelivr.
 
-Served via **HTTPS** (required for camera access):
+`lib/gazepoint_sdk_web.dart` implements the plugin on web (camera via `getUserMedia`, landmarks via MediaPipe). It does **not** wrap GazePointSDK-Web. `localhost` is treated as a secure origin, so HTTPS is not required for `flutter run -d chrome`.
 
 ```bash
-flutter run -d chrome --web-hostname localhost --web-port 8080
+cd example
+flutter pub get
+flutter run -d chrome
 ```
+
+Allow the camera when Chrome prompts. If MediaPipe fails to load, check the network tab.
 
 **Supported Browsers:**
 - Chrome 90+
@@ -283,20 +287,20 @@ flutter run -d chrome --web-hostname localhost --web-port 8080
 
 **Minimum Version:** Windows 10 (build 1903+)
 
-Camera permissions are managed by Windows Settings. The app will prompt when needed.
+The Flutter Windows plugin class is **not implemented** yet (`pluginClass: GazepointSdkPluginWindows` is declared in `pubspec.yaml` with no sources). Use the [native Windows SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) until then.
 
 ### macOS
 
 **Minimum Version:** macOS 12.0 (Monterey)
 
-Add camera permission to `macos/Runner/Info.plist`:
+The Flutter macOS plugin sources are **not implemented** yet (`macos/gazepoint_sdk/Package.swift` still points outside the package root). Use the [native macOS SDK](https://github.com/Tareq-Ghassan/GazePointSDK-macOS) until then.
+
+Add camera permission to `macos/Runner/Info.plist` when the plugin exists:
 
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>Camera access is required for eye tracking and gaze detection</string>
 ```
-
-Enable camera in **System Preferences → Security & Privacy → Privacy → Camera**
 
 ### Linux
 
@@ -305,18 +309,7 @@ Enable camera in **System Preferences → Security & Privacy → Privacy → Cam
 - OpenCV 4.x
 - V4L2 (Video4Linux2)
 
-Install dependencies:
-
-```bash
-sudo apt-get install libopencv-dev v4l-utils
-```
-
-Grant camera permissions:
-
-```bash
-sudo usermod -a -G video $USER
-# Log out and back in
-```
+The Flutter Linux plugin class is **not implemented** yet. Use the [native Linux SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) until then.
 
 ## 📖 API Reference
 
@@ -491,18 +484,15 @@ The plugin and the host app must both use JVM 17. In `android/app/build.gradle.k
 
 ## 🏗️ Architecture
 
-GazePoint SDK uses native implementations for each platform:
+GazePoint SDK uses native implementations for Android and iOS. Web is a Dart implementation (MediaPipe Face Mesh from jsDelivr), not a wrap of GazePointSDK-Web. Windows / macOS / Linux plugin files are not in this repo yet.
 
 ```
 Flutter App
     ↓
 GazePoint Flutter Plugin
     ↓
-Platform Channels
-    ↓
-Native SDKs (Android, iOS, Web, Windows, macOS, Linux)
-    ↓
-Platform APIs (ML Kit, Vision, MediaPipe, OpenCV, etc.)
+Android / iOS: platform channels → native SDKs (ML Kit, Vision)
+Web: Dart JS interop → getUserMedia + MediaPipe Face Mesh (CDN)
 ```
 
 Each platform SDK is independently maintained:
