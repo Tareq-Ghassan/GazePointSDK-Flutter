@@ -23,6 +23,9 @@ import 'models/performance_metrics.dart';
 /// }
 /// ```
 class GazeTracker {
+  /// Creates a gaze tracker that talks to the native GazePoint SDKs.
+  GazeTracker();
+
   final GazepointSdkPlatform _platform = GazepointSdkPlatform.instance;
 
   bool _isInitialized = false;

@@ -8,6 +8,9 @@ import 'models/performance_metrics.dart';
 
 /// An implementation of [GazepointSdkPlatform] that uses method channels.
 class MethodChannelGazepointSdk extends GazepointSdkPlatform {
+  /// Creates a method-channel implementation of [GazepointSdkPlatform].
+  MethodChannelGazepointSdk();
+
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('gazepoint_sdk');
@@ -94,14 +97,11 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
 
   @override
   Stream<GazeResult> get gazeStream {
-    _gazeStream ??= eventChannel
-        .receiveBroadcastStream()
-        .where((event) {
-          return event is Map;
-        })
-        .map((event) {
-          return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
-        });
+    _gazeStream ??= eventChannel.receiveBroadcastStream().where((event) {
+      return event is Map;
+    }).map((event) {
+      return GazeResult.fromJson(Map<String, dynamic>.from(event as Map));
+    });
     return _gazeStream!;
   }
 

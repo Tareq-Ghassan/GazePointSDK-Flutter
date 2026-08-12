@@ -1,0 +1,39 @@
+name: Bug report
+description: Something is wrong with gazepoint_sdk (Flutter)
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the public inbox for **Flutter / pub.dev** users.
+        Native-only Android or iOS apps should open issues on
+        [GazePointSDK-Android](https://github.com/Tareq-Ghassan/GazePointSDK-Android)
+        or [GazePointSDK-iOS](https://github.com/Tareq-Ghassan/GazePointSDK-iOS).
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it reproduce?
+      options:
+        - Android
+        - iOS
+        - Web
+        - Windows
+        - macOS
+        - Linux
+        - Dart API only
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Expected vs actual behavior, and how to reproduce.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: gazepoint_sdk version
+      placeholder: "3.0.2"
+    validations:
+      required: true

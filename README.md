@@ -470,13 +470,13 @@ Each platform SDK is independently maintained:
 
 Comprehensive examples for all platforms:
 
-- **[Flutter Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/flutter_example)** - Cross-platform Flutter app
-- **[Android Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/android_example)** - Native Android app
-- **[iOS Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/ios_example)** - Native iOS app
-- **[Web Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/web_example)** - Browser-based demo
-- **[Windows Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/windows_example)** - Native Windows app
-- **[macOS Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/macos_example)** - Native macOS app
-- **[Linux Example](https://github.com/Tareq-Ghassan/FaceDetection-GazePoint/tree/main/linux_example)** - Native Linux app
+- **[Flutter Example](https://github.com/Tareq-Ghassan/GazePointSDK-Flutter/tree/main/example)** - Plugin example (pub.dev)
+- **[Android Example](https://github.com/Tareq-Ghassan/GazePointSDK-Android/tree/main/example)** - Native Android app
+- **[iOS Example](https://github.com/Tareq-Ghassan/GazePointSDK-iOS/tree/main/Example)** - Native iOS app
+- **[Web Example](https://github.com/Tareq-Ghassan/GazePointSDK-Web/tree/main/example)** - Browser-based demo
+- **[Windows Example](https://github.com/Tareq-Ghassan/GazePointSDK-Windows/tree/main/example)** - Native Windows app
+- **[macOS Example](https://github.com/Tareq-Ghassan/GazePointSDK-macOS/tree/main/example)** - Native macOS app
+- **[Linux Example](https://github.com/Tareq-Ghassan/GazePointSDK-Linux/tree/main/example)** - Native Linux app
 
 ## 🤝 Contributing
 

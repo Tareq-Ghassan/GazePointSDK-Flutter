@@ -1,0 +1,48 @@
+name: Publish Flutter plugin
+
+# Independent of Android/iOS/other SDK tags.
+# One-time: pub.dev → gazepoint_sdk → Automated publishing from GitHub Actions
+#   Repository: Tareq-Ghassan/GazePointSDK-Flutter
+#   Tag pattern: v{{version}}
+#
+#   git tag v3.0.2 && git push origin v3.0.2
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish → pub.dev
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Require pubspec version == tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PUBSPEC="$(ruby -ryaml -e "puts YAML.load_file('pubspec.yaml')['version']")"
+          echo "pubspec=$PUBSPEC tag=$TAG"
+          test "$PUBSPEC" = "$TAG"
+
+      - run: dart format --output=none --set-exit-if-changed lib
+      - run: flutter pub get
+      - run: dart pub global activate pana
+      - run: pana --no-warning --exit-code-threshold 0
+      - run: dart pub publish --dry-run
+      - run: dart pub publish --force
