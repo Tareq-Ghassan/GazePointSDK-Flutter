@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 
 import 'gaze_tracker.dart';
 
-/// Hosts the native SDK camera preview ([GazePreviewView] on Android/iOS/macOS).
+/// Hosts the native SDK camera preview (`GazePreviewView` on Android/iOS/macOS,
+/// an `HtmlElementView` of the camera on web).
 ///
 /// Face rectangles and multi-face handling are drawn by the native SDK.
 /// Place this widget when [GazeTrackerOptions.previewEnabled] is true.
 /// Metrics still arrive on [GazeTracker.gazeStream] if you never add it.
 class GazePreview extends StatelessWidget {
-  /// Platform view type registered by the Android / iOS / macOS plugins.
+  /// Platform view type registered by the Android / iOS / macOS / web plugins.
   static const viewType = 'gazepoint_sdk/preview';
 
   /// Tracker whose native session this preview displays.

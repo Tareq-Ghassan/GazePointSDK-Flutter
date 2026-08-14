@@ -37,7 +37,7 @@ import Foundation
 public struct GazePointSDK {
     
     /// Current version of the SDK
-    public static let version = "2.2.0"
+    public static let version = "2.2.1"
     
     /// Build number
     public static let build = "1"

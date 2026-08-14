@@ -290,7 +290,7 @@ Prefer USB on iOS 26. Tap **Allow** when asked. `flutter run -d ios --release` r
 
 **Requirements:** Modern browser with WebRTC, Dart SDK `>=3.6.0`, and network access to load MediaPipe Face Mesh from jsDelivr.
 
-`lib/gazepoint_sdk_web.dart` implements the plugin on web (camera via `getUserMedia`, landmarks via MediaPipe). It does **not** wrap GazePointSDK-Web. `localhost` is treated as a secure origin, so HTTPS is not required for `flutter run -d chrome`.
+`lib/gazepoint_sdk_web.dart` implements the plugin on web (camera via `getUserMedia`, landmarks via MediaPipe). It does **not** wrap GazePointSDK-Web. `registerWith` registers the `gazepoint_sdk/preview` `HtmlElementView` factory so [GazePreview] shows the live camera. `localhost` is treated as a secure origin, so HTTPS is not required for `flutter run -d chrome`.
 
 ```bash
 cd example

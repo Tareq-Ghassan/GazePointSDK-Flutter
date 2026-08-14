@@ -67,8 +67,7 @@ class GazeResult {
     final faceCount = (map['faceCount'] as num?)?.toInt() ?? 0;
     final faceDetected =
         map['faceDetected'] as bool? ?? map['gazePointX'] != null;
-    final timestamp =
-        (map['timestamp'] as num?)?.toInt() ??
+    final timestamp = (map['timestamp'] as num?)?.toInt() ??
         DateTime.now().millisecondsSinceEpoch;
     final statusText = map['statusText'] as String? ??
         (faceCount > 1

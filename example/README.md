@@ -54,6 +54,7 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - Chrome (or another WebRTC browser). Allow the camera when prompted.
 - `localhost` is a secure origin; HTTPS is not required for `flutter run -d chrome`.
 - MediaPipe Face Mesh loads from jsDelivr — needs network access.
+- A black preview with `unregistered_view_type: gazepoint_sdk/preview` means an old plugin build; hot-restart or `flutter run -d chrome` again so `registerViewFactory` runs.
 
 ### macOS
 - Minimum macOS version: 13.0 (`MACOSX_DEPLOYMENT_TARGET` in `macos/Runner.xcodeproj`)

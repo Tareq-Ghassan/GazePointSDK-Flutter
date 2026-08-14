@@ -18,7 +18,7 @@ public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = GazepointSdkPlugin()
-        instance.camera = GazeCamera()
+        instance.camera = GazeCamera.create()
         instance.camera?.onFrame = { [weak instance] frame in
             let mapped = instance?.toMap(frame)
             instance?.latestResult = mapped
@@ -58,7 +58,7 @@ public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             let previewEnabled = args?["previewEnabled"] as? Bool ?? false
             let showFaceBoxes = args?["showFaceBoxes"] as? Bool ?? true
             if camera == nil {
-                let cam = GazeCamera()
+                let cam = GazeCamera.create()
                 cam.onFrame = { [weak self] frame in
                     let mapped = self?.toMap(frame)
                     self?.latestResult = mapped

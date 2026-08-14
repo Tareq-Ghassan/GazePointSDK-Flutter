@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:ui';
+import 'dart:ui_web' as ui_web;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:web/web.dart' as web;
 
+import 'src/gaze_preview.dart';
 import 'src/gazepoint_sdk_platform_interface.dart';
 import 'src/models/gaze_calibration_point.dart';
 import 'src/models/gaze_result.dart';
@@ -20,19 +22,98 @@ import 'src/models/performance_metrics.dart';
 class GazepointSdkWeb extends GazepointSdkPlatform {
   /// Registers this class as the default [GazepointSdkPlatform] on web.
   static void registerWith(Registrar registrar) {
-    GazepointSdkPlatform.instance = GazepointSdkWeb();
+    final plugin = GazepointSdkWeb();
+    GazepointSdkPlatform.instance = plugin;
+    ui_web.platformViewRegistry.registerViewFactory(
+      GazePreview.viewType,
+      (int viewId) => plugin._previewHost,
+    );
+  }
+
+  GazepointSdkWeb() {
+    _video = web.HTMLVideoElement()
+      ..autoplay = true
+      ..muted = true
+      ..setAttribute('playsinline', 'true');
+    _video.style
+      ..setProperty('width', '100%')
+      ..setProperty('height', '100%')
+      ..setProperty('object-fit', 'cover')
+      ..setProperty('transform', 'scaleX(-1)');
+
+    _overlay = web.HTMLCanvasElement();
+    _overlay.style
+      ..setProperty('position', 'absolute')
+      ..setProperty('inset', '0')
+      ..setProperty('width', '100%')
+      ..setProperty('height', '100%')
+      ..setProperty('pointer-events', 'none');
+
+    _previewHost = web.HTMLDivElement();
+    _previewHost.style
+      ..setProperty('width', '100%')
+      ..setProperty('height', '100%')
+      ..setProperty('position', 'relative')
+      ..setProperty('overflow', 'hidden')
+      ..setProperty('background', '#000');
+    _previewHost.append(_video);
+    _previewHost.append(_overlay);
   }
 
   static const _faceMeshCdn =
       'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619';
 
+  static const _faceOval = <int>[
+    10,
+    338,
+    297,
+    332,
+    284,
+    251,
+    389,
+    356,
+    454,
+    323,
+    361,
+    288,
+    397,
+    365,
+    379,
+    378,
+    400,
+    377,
+    152,
+    148,
+    176,
+    149,
+    150,
+    136,
+    172,
+    58,
+    132,
+    93,
+    234,
+    127,
+    162,
+    21,
+    54,
+    103,
+    67,
+    109,
+  ];
+
   final _gazeController = StreamController<GazeResult>.broadcast();
-  web.HTMLVideoElement? _video;
+  late final web.HTMLDivElement _previewHost;
+  late final web.HTMLVideoElement _video;
+  late final web.HTMLCanvasElement _overlay;
   web.MediaStream? _stream;
   JSObject? _faceMesh;
   bool _initialized = false;
   bool _tracking = false;
   bool _scriptsLoaded = false;
+  bool _previewEnabled = false;
+  bool _showFaceBoxes = true;
+  bool _usingFront = true;
   GazeResult? _latest;
   int _totalFrames = 0;
   int _droppedFrames = 0;
@@ -51,23 +132,40 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     GazeTrackerOptions options = const GazeTrackerOptions(),
   }) async {
     await _ensureScripts();
-    _video ??= web.HTMLVideoElement()
-      ..autoplay = true
-      ..muted = true
-      ..setAttribute('playsinline', 'true')
-      ..style.display = 'none';
-    web.document.body?.append(_video!);
+    _previewEnabled = options.previewEnabled;
+    _showFaceBoxes = options.showFaceBoxes;
     _initialized = true;
   }
 
   @override
   Future<void> setPreviewEnabled(bool enabled) async {
-    _video?.style.display = enabled ? 'block' : 'none';
+    _previewEnabled = enabled;
+    if (!enabled) {
+      _clearBoxes();
+    }
   }
 
   @override
   Future<void> switchCamera() async {
-    // Web uses the user-facing camera by default.
+    _usingFront = !_usingFront;
+    _video.style.setProperty(
+      'transform',
+      _usingFront ? 'scaleX(-1)' : 'none',
+    );
+    if (!_tracking) return;
+    _stopTracks();
+    try {
+      _stream = await _openCamera();
+    } catch (_) {
+      _usingFront = !_usingFront;
+      _video.style.setProperty(
+        'transform',
+        _usingFront ? 'scaleX(-1)' : 'none',
+      );
+      _stream = await _openCamera();
+    }
+    _video.srcObject = _stream;
+    await _video.play().toDart;
   }
 
   @override
@@ -75,20 +173,20 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     if (!_initialized) {
       throw StateError('Call initialize() first');
     }
-    final video = _video!;
     _stream ??= await _openCamera();
-    video.srcObject = _stream;
-    await video.play().toDart;
+    _video.srcObject = _stream;
+    await _video.play().toDart;
     _faceMesh ??= _createFaceMesh();
     _tracking = true;
-    _pump(video);
+    _pump();
   }
 
   @override
   Future<void> stopTracking() async {
     _tracking = false;
-    _video?.pause();
+    _video.pause();
     _stopTracks();
+    _clearBoxes();
   }
 
   @override
@@ -150,7 +248,11 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
 
   Future<web.MediaStream> _openCamera() {
     final constraints = web.MediaStreamConstraints(
-      video: {'facingMode': 'user', 'width': 1280, 'height': 720}.jsify()!,
+      video: {
+        'facingMode': _usingFront ? 'user' : 'environment',
+        'width': 1280,
+        'height': 720,
+      }.jsify()!,
     );
     return web.window.navigator.mediaDevices.getUserMedia(constraints).toDart;
   }
@@ -163,7 +265,7 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
       track.stop();
     }
     _stream = null;
-    _video?.srcObject = null;
+    _video.srcObject = null;
   }
 
   Future<void> _ensureScripts() async {
@@ -205,7 +307,7 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     final mesh = _FaceMesh(config);
     mesh.setOptions(
       {
-        'maxNumFaces': 1,
+        'maxNumFaces': 4,
         'refineLandmarks': true,
         'minDetectionConfidence': 0.5,
         'minTrackingConfidence': 0.5,
@@ -217,13 +319,13 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     return mesh as JSObject;
   }
 
-  Future<void> _pump(web.HTMLVideoElement video) async {
+  Future<void> _pump() async {
     final mesh = _faceMesh;
     if (mesh == null) return;
     while (_tracking) {
       final started = DateTime.now();
       try {
-        final input = JSObject()..setProperty('image'.toJS, video);
+        final input = JSObject()..setProperty('image'.toJS, _video);
         await (mesh as _FaceMesh).send(input).toDart;
       } catch (_) {
         _droppedFrames++;
@@ -243,12 +345,27 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
       return;
     }
     final list = faces as JSArray<JSObject>;
-    if (list.length == 0) {
-      _gazeController.add(GazeResult.noFace());
+    final count = list.length;
+
+    if (_previewEnabled && _showFaceBoxes) {
+      _drawBoxes(list);
+    } else {
+      _clearBoxes();
+    }
+
+    if (count != 1) {
+      _hasSmooth = false;
+      final frame = GazeResult.noFace(
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        faceCount: count,
+        statusText: count > 1 ? 'Multiple faces detected' : 'No face detected',
+      );
+      _latest = frame;
+      _gazeController.add(frame);
       return;
     }
-    final landmarks = list[0];
-    final result = _estimate(landmarks);
+
+    final result = _estimate(list[0]);
     if (result == null) {
       _droppedFrames++;
       return;
@@ -266,29 +383,97 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     _gazeController.add(result);
   }
 
-  GazeResult? _estimate(JSObject landmarks) {
-    Offset? at(int i) {
-      final point = landmarks.getProperty(i.toJS);
-      if (point.isUndefinedOrNull) return null;
-      final p = point as JSObject;
-      final x = (p.getProperty('x'.toJS) as JSNumber?)?.toDartDouble;
-      final y = (p.getProperty('y'.toJS) as JSNumber?)?.toDartDouble;
-      if (x == null || y == null) return null;
-      return Offset(x, y);
-    }
+  void _drawBoxes(JSArray<JSObject> faces) {
+    final ctx = _overlay.context2D;
+    final viewW = _previewHost.clientWidth.toDouble();
+    final viewH = _previewHost.clientHeight.toDouble();
+    final vw = _video.videoWidth.toDouble();
+    final vh = _video.videoHeight.toDouble();
+    if (viewW < 1 || viewH < 1 || vw < 1 || vh < 1) return;
 
-    // MediaPipe iris (refineLandmarks): 468 left, 473 right.
-    final leftIris = at(468);
-    final rightIris = at(473);
-    final leftInner = at(133);
-    final leftOuter = at(33);
-    final rightInner = at(362);
-    final rightOuter = at(263);
-    final leftTop = at(159);
-    final leftBottom = at(145);
-    final nose = at(1);
-    final leftCheek = at(234);
-    final rightCheek = at(454);
+    final dpr = web.window.devicePixelRatio;
+    final pixelW = (viewW * dpr).round();
+    final pixelH = (viewH * dpr).round();
+    if (_overlay.width != pixelW || _overlay.height != pixelH) {
+      _overlay.width = pixelW;
+      _overlay.height = pixelH;
+    }
+    ctx.clearRect(0, 0, _overlay.width, _overlay.height);
+
+    final scale = viewW / vw > viewH / vh ? viewW / vw : viewH / vh;
+    final drawnW = vw * scale;
+    final drawnH = vh * scale;
+    final ox = (viewW - drawnW) / 2;
+    final oy = (viewH - drawnH) / 2;
+
+    ctx.strokeStyle = '#ffffff'.toJS;
+    ctx.lineWidth = 3 * dpr;
+    for (var i = 0; i < faces.length; i++) {
+      final box = _boxFromLandmarks(faces[i]);
+      if (box == null) continue;
+      var left = box.$1 * drawnW + ox;
+      var top = box.$2 * drawnH + oy;
+      final width = box.$3 * drawnW;
+      final height = box.$4 * drawnH;
+      if (_usingFront) {
+        left = viewW - left - width;
+      }
+      final insetX = width * 0.08;
+      final insetY = height * 0.06;
+      ctx.strokeRect(
+        (left + insetX) * dpr,
+        (top + insetY) * dpr,
+        (width - insetX * 2).clamp(0, width) * dpr,
+        (height - insetY * 2).clamp(0, height) * dpr,
+      );
+    }
+  }
+
+  (double, double, double, double)? _boxFromLandmarks(JSObject landmarks) {
+    var minX = 1.0;
+    var minY = 1.0;
+    var maxX = 0.0;
+    var maxY = 0.0;
+    var used = 0;
+    for (final i in _faceOval) {
+      final p = _at(landmarks, i);
+      if (p == null) continue;
+      used++;
+      if (p.dx < minX) minX = p.dx;
+      if (p.dy < minY) minY = p.dy;
+      if (p.dx > maxX) maxX = p.dx;
+      if (p.dy > maxY) maxY = p.dy;
+    }
+    if (used < 2) return null;
+    return (minX, minY, (maxX - minX).clamp(0, 1), (maxY - minY).clamp(0, 1));
+  }
+
+  void _clearBoxes() {
+    _overlay.context2D.clearRect(0, 0, _overlay.width, _overlay.height);
+  }
+
+  Offset? _at(JSObject landmarks, int i) {
+    final point = landmarks.getProperty(i.toJS);
+    if (point.isUndefinedOrNull) return null;
+    final p = point as JSObject;
+    final x = (p.getProperty('x'.toJS) as JSNumber?)?.toDartDouble;
+    final y = (p.getProperty('y'.toJS) as JSNumber?)?.toDartDouble;
+    if (x == null || y == null) return null;
+    return Offset(x, y);
+  }
+
+  GazeResult? _estimate(JSObject landmarks) {
+    final leftInner = _at(landmarks, 133);
+    final leftOuter = _at(landmarks, 33);
+    final rightInner = _at(landmarks, 362);
+    final rightOuter = _at(landmarks, 263);
+    final leftTop = _at(landmarks, 159);
+    final leftBottom = _at(landmarks, 145);
+    final rightTop = _at(landmarks, 386);
+    final rightBottom = _at(landmarks, 374);
+    final nose = _at(landmarks, 1);
+    final leftCheek = _at(landmarks, 234);
+    final rightCheek = _at(landmarks, 454);
     if (leftInner == null ||
         leftOuter == null ||
         rightInner == null ||
@@ -297,30 +482,36 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
       return null;
     }
 
-    final irisL = leftIris ??
+    final irisL = _at(landmarks, 468) ??
         Offset(
           (leftInner.dx + leftOuter.dx) / 2,
           (leftInner.dy + leftOuter.dy) / 2,
         );
-    final irisR = rightIris ??
+    final irisR = _at(landmarks, 473) ??
         Offset(
           (rightInner.dx + rightOuter.dx) / 2,
           (rightInner.dy + rightOuter.dy) / 2,
         );
 
-    double ratio(Offset iris, Offset inner, Offset outer) {
+    double ratioX(Offset iris, Offset inner, Offset outer) {
       final span = outer.dx - inner.dx;
       if (span.abs() < 1e-5) return 0.5;
       return ((iris.dx - inner.dx) / span).clamp(0.0, 1.0);
     }
 
-    final rx = (ratio(irisL, leftInner, leftOuter) +
-            ratio(irisR, rightInner, rightOuter)) /
+    double ratioY(Offset iris, Offset? top, Offset? bottom) {
+      if (top == null || bottom == null) return 0.5;
+      final span = bottom.dy - top.dy;
+      if (span.abs() < 1e-5) return 0.5;
+      return ((iris.dy - top.dy) / span).clamp(0.0, 1.0);
+    }
+
+    final rx = (ratioX(irisL, leftInner, leftOuter) +
+            ratioX(irisR, rightInner, rightOuter)) /
         2;
-    final leftSpanY = (leftBottom?.dy ?? irisL.dy) - (leftTop?.dy ?? irisL.dy);
-    final ry = leftSpanY.abs() < 1e-5
-        ? 0.5
-        : ((irisL.dy - (leftTop?.dy ?? irisL.dy)) / leftSpanY).clamp(0.0, 1.0);
+    final ry = (ratioY(irisL, leftTop, leftBottom) +
+            ratioY(irisR, rightTop, rightBottom)) /
+        2;
 
     final faceCx =
         ((leftCheek ?? leftOuter).dx + (rightCheek ?? rightOuter).dx) / 2;
@@ -329,11 +520,12 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
 
     final width = web.window.innerWidth.toDouble();
     final height = web.window.innerHeight.toDouble();
-    // Selfie camera is mirrored: look right → iris moves left in the frame.
-    var x = width * (1 - rx);
-    var y = height * ry;
-    x += yaw / 45 * width * 0.15;
-    y += pitch / 45 * height * 0.15;
+    final lookX = _usingFront ? 1 - rx : rx;
+    final lookY = 0.5 + (ry - 0.5) * 0.35;
+    var x = width * lookX;
+    var y = height * lookY;
+    x += ((_usingFront ? -yaw : yaw) / 45) * width * 0.12;
+    y -= ((pitch - 8) / 45) * height * 0.12;
 
     if (_calibration.length >= 3) {
       x = _mapCalibrated(x, true);
