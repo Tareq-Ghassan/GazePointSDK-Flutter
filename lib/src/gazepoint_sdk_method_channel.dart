@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'gazepoint_sdk_platform_interface.dart';
 import 'models/gaze_calibration_point.dart';
 import 'models/gaze_result.dart';
+import 'models/gaze_tracker_options.dart';
 import 'models/json_map.dart';
 import 'models/performance_metrics.dart';
 
@@ -23,9 +24,11 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
   Stream<GazeResult>? _gazeStream;
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize({
+    GazeTrackerOptions options = const GazeTrackerOptions(),
+  }) async {
     try {
-      await methodChannel.invokeMethod<void>('initialize');
+      await methodChannel.invokeMethod<void>('initialize', options.toJson());
     } on PlatformException catch (e) {
       throw Exception('Failed to initialize: ${e.message}');
     }
@@ -46,6 +49,26 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
       await methodChannel.invokeMethod<void>('stopTracking');
     } on PlatformException catch (e) {
       throw Exception('Failed to stop tracking: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> setPreviewEnabled(bool enabled) async {
+    try {
+      await methodChannel.invokeMethod<void>('setPreviewEnabled', {
+        'enabled': enabled,
+      });
+    } on PlatformException catch (e) {
+      throw Exception('Failed to set preview: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> switchCamera() async {
+    try {
+      await methodChannel.invokeMethod<void>('switchCamera');
+    } on PlatformException catch (e) {
+      throw Exception('Failed to switch camera: ${e.message}');
     }
   }
 
@@ -98,9 +121,10 @@ class MethodChannelGazepointSdk extends GazepointSdkPlatform {
 
   @override
   Stream<GazeResult> get gazeStream {
-    _gazeStream ??= eventChannel.receiveBroadcastStream().where((event) {
-      return event is Map;
-    }).map((event) {
+    _gazeStream ??= eventChannel.receiveBroadcastStream().map((event) {
+      if (event is! Map) {
+        return GazeResult.noFace();
+      }
       return GazeResult.fromJson(jsonMap(event));
     });
     return _gazeStream!;

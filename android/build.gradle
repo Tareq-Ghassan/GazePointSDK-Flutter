@@ -3,6 +3,7 @@ version = '3.0.4'
 
 buildscript {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
@@ -15,6 +16,7 @@ buildscript {
 
 rootProject.allprojects {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
@@ -54,16 +56,11 @@ afterEvaluate {
 dependencies {
     // Native Android SDK is published independently on JitPack.
     // Bump this version only when the Flutter plugin should pick up a new Android release.
-    api 'com.github.Tareq-Ghassan:GazePointSDK-Android:2.1.1'
+    api 'com.github.Tareq-Ghassan:GazePointSDK-Android:2.2.0'
 
     implementation 'androidx.core:core-ktx:1.15.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
     implementation 'androidx.lifecycle:lifecycle-process:2.8.7'
     implementation 'androidx.annotation:annotation:1.9.1'
-
-    def camerax_version = '1.6.1'
-    implementation "androidx.camera:camera-core:${camerax_version}"
-    implementation "androidx.camera:camera-camera2:${camerax_version}"
-    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
 }

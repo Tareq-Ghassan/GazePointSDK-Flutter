@@ -8,6 +8,10 @@ import android.graphics.PointF
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.gazepoint.sdk.camera.GazeCamera
+import com.gazepoint.sdk.camera.GazeCameraOptions
+import com.gazepoint.sdk.camera.GazeFrame
+import com.gazepoint.sdk.camera.GazePreviewView
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -19,7 +23,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
 /**
- * Flutter plugin wrapper around the Android GazePoint SDK.
+ * Flutter wrapper around the Android GazePoint SDK ([GazeCamera]).
  */
 class GazepointSdkPlugin :
     FlutterPlugin,
@@ -33,10 +37,12 @@ class GazepointSdkPlugin :
     private var applicationContext: Context? = null
     private var activity: Activity? = null
     private var activityBinding: ActivityPluginBinding? = null
-    private var cameraController: GazeCameraController? = null
+    private var gazeCamera: GazeCamera? = null
     private var eventSink: EventChannel.EventSink? = null
     private var pendingPermissionResult: Result? = null
+    private var pendingPreview: GazePreviewView? = null
     private var isInitialized = false
+    private var latestResult: Map<String, Any?>? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         applicationContext = binding.applicationContext
@@ -44,13 +50,17 @@ class GazepointSdkPlugin :
         channel.setMethodCallHandler(this)
         eventChannel = EventChannel(binding.binaryMessenger, "gazepoint_sdk/gaze_stream")
         eventChannel.setStreamHandler(this)
+        binding.platformViewRegistry.registerViewFactory(
+            "gazepoint_sdk/preview",
+            GazePreviewFactory(this)
+        )
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
         eventChannel.setStreamHandler(null)
-        cameraController?.dispose()
-        cameraController = null
+        gazeCamera?.dispose()
+        gazeCamera = null
         applicationContext = null
         isInitialized = false
     }
@@ -73,7 +83,7 @@ class GazepointSdkPlugin :
 
     override fun onDetachedFromActivity() {
         activityBinding?.removeRequestPermissionsResultListener(this)
-        cameraController?.stop()
+        gazeCamera?.stop()
         activity = null
         activityBinding = null
     }
@@ -86,6 +96,18 @@ class GazepointSdkPlugin :
         eventSink = null
     }
 
+    internal fun attachPreview(view: GazePreviewView) {
+        pendingPreview = view
+        gazeCamera?.attachPreview(view)
+    }
+
+    internal fun detachPreview(view: GazePreviewView) {
+        if (pendingPreview === view) {
+            pendingPreview = null
+        }
+        gazeCamera?.detachPreview(view)
+    }
+
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "initialize" -> {
@@ -94,14 +116,24 @@ class GazepointSdkPlugin :
                     result.error("NO_CONTEXT", "Plugin not attached", null)
                     return
                 }
-                if (cameraController == null) {
-                    cameraController = GazeCameraController(context) { gaze ->
+                val previewEnabled = call.argument<Boolean>("previewEnabled") ?: false
+                val showFaceBoxes = call.argument<Boolean>("showFaceBoxes") ?: true
+                if (gazeCamera == null) {
+                    gazeCamera = GazeCamera(context) { frame ->
+                        val mapped = toMap(frame)
+                        latestResult = mapped
                         activity?.runOnUiThread {
-                            eventSink?.success(gaze)
+                            eventSink?.success(mapped)
                         }
                     }
                 }
-                cameraController?.initialize()
+                gazeCamera?.configure(
+                    GazeCameraOptions(
+                        previewEnabled = previewEnabled,
+                        showFaceBoxes = showFaceBoxes
+                    )
+                )
+                pendingPreview?.let { gazeCamera?.attachPreview(it) }
                 isInitialized = true
                 result.success(null)
             }
@@ -112,21 +144,32 @@ class GazepointSdkPlugin :
                     result.error("NO_ACTIVITY", "Activity not available", null)
                     return
                 }
-                if (!isInitialized || cameraController == null) {
+                if (!isInitialized || gazeCamera == null) {
                     result.error("NOT_INITIALIZED", "Call initialize() first", null)
                     return
                 }
-                cameraController?.start(owner)
+                gazeCamera?.start(owner)
                 result.success(null)
             }
 
             "stopTracking" -> {
-                cameraController?.stop()
+                gazeCamera?.stop()
+                result.success(null)
+            }
+
+            "setPreviewEnabled" -> {
+                val enabled = call.argument<Boolean>("enabled") ?: false
+                gazeCamera?.previewEnabled = enabled
+                result.success(null)
+            }
+
+            "switchCamera" -> {
+                gazeCamera?.switchCamera()
                 result.success(null)
             }
 
             "getLatestGaze" -> {
-                result.success(cameraController?.getLatestGaze())
+                result.success(latestResult)
             }
 
             "calibrate" -> {
@@ -149,21 +192,29 @@ class GazepointSdkPlugin :
                     result.error("INVALID_ARGS", "Invalid calibration point format", null)
                     return
                 }
-                cameraController?.calibrate(points)
+                gazeCamera?.calibrate(points)
                 result.success(null)
             }
 
             "resetCalibration" -> {
-                cameraController?.resetCalibration()
+                gazeCamera?.resetCalibration()
                 result.success(null)
             }
 
             "getPerformanceMetrics" -> {
-                val metrics = cameraController?.getPerformanceMetrics()
+                val metrics = gazeCamera?.getPerformanceMetrics()
                 if (metrics == null) {
                     result.error("NOT_INITIALIZED", "Tracker not initialized", null)
                 } else {
-                    result.success(metrics)
+                    result.success(
+                        mapOf(
+                            "fps" to metrics.fps.toDouble(),
+                            "avgProcessingTimeMs" to metrics.avgProcessingTimeMs.toDouble(),
+                            "maxProcessingTimeMs" to metrics.maxProcessingTimeMs.toDouble(),
+                            "droppedFrames" to metrics.droppedFrames,
+                            "totalFrames" to metrics.totalFrames
+                        )
+                    )
                 }
             }
 
@@ -228,6 +279,28 @@ class GazepointSdkPlugin :
         pendingPermissionResult?.success(granted)
         pendingPermissionResult = null
         return true
+    }
+
+    private fun toMap(frame: GazeFrame): Map<String, Any?> {
+        val gaze = frame.gaze
+        val map = mutableMapOf<String, Any?>(
+            "faceDetected" to frame.faceDetected,
+            "faceCount" to frame.faceCount,
+            "statusText" to frame.statusText,
+            "timestamp" to System.currentTimeMillis()
+        )
+        if (gaze != null) {
+            map["gazePointX"] = gaze.gazePoint.x.toDouble()
+            map["gazePointY"] = gaze.gazePoint.y.toDouble()
+            map["confidence"] = gaze.confidence.toDouble()
+            map["isBlinking"] = gaze.isBlinking
+            map["headPose"] = mapOf(
+                "pitch" to gaze.headPose.pitch.toDouble(),
+                "yaw" to gaze.headPose.yaw.toDouble(),
+                "roll" to gaze.headPose.roll.toDouble()
+            )
+        }
+        return map
     }
 
     companion object {

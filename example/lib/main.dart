@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gazepoint_sdk/gazepoint_sdk.dart';
 
 void main() {
@@ -11,11 +14,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GazePoint SDK Example',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      title: 'GazePoint SDK Demo',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
       home: const GazeTrackingPage(),
     );
   }
@@ -29,170 +30,192 @@ class GazeTrackingPage extends StatefulWidget {
 }
 
 class _GazeTrackingPageState extends State<GazeTrackingPage> {
-  final GazeTracker _gazeTracker = GazeTracker();
-  Offset _gazePoint = Offset.zero;
-  double _confidence = 0.0;
-  bool _isBlinking = false;
-  bool _isTracking = false;
-  String _statusMessage = 'Not initialized';
+  final GazeTracker _tracker = GazeTracker();
+  StreamSubscription<GazeResult>? _subscription;
+  GazeResult? _latest;
+  bool _started = false;
+  String _status = 'Starting camera…';
 
   @override
   void initState() {
     super.initState();
-    _initializeGazeTracking();
+    _start();
   }
 
-  Future<void> _initializeGazeTracking() async {
+  Future<void> _start() async {
     try {
-      setState(() {
-        _statusMessage = 'Initializing...';
+      await _tracker.initialize(
+        options: const GazeTrackerOptions(
+          previewEnabled: true,
+          showFaceBoxes: true,
+        ),
+      );
+      _subscription = _tracker.gazeStream.listen((result) {
+        if (!mounted) return;
+        setState(() {
+          _latest = result;
+          _status = result.statusText;
+        });
       });
-
-      await _gazeTracker.initialize();
-
-      setState(() {
-        _statusMessage = 'Initialized. Ready to start tracking.';
-      });
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Initialization failed: $e';
-      });
-    }
-  }
-
-  Future<void> _startTracking() async {
-    try {
-      setState(() {
-        _statusMessage = 'Requesting camera permission...';
-      });
-
-      final granted = await _gazeTracker.requestCameraPermission();
+      final granted = await _tracker.requestCameraPermission();
       if (!granted) {
         setState(() {
-          _statusMessage =
-              'Camera permission denied. Open the emulator/device settings for this app, enable Camera, then tap Start Tracking again.';
+          _status =
+              'Camera permission denied. Enable Camera in app settings.';
         });
         return;
       }
-
-      await _gazeTracker.startTracking();
-
-      _gazeTracker.gazeStream.listen((result) {
-        if (!mounted) return;
-        setState(() {
-          _gazePoint = result.gazePoint;
-          _confidence = result.confidence;
-          _isBlinking = result.isBlinking;
-          _isTracking = true;
-          _statusMessage = 'Tracking active';
-        });
-      });
-
+      await _tracker.startTracking();
+      if (!mounted) return;
       setState(() {
-        _isTracking = true;
-        _statusMessage = 'Tracking started';
+        _started = true;
+        _status = 'Look at the screen — tracking…';
       });
     } catch (e) {
-      setState(() {
-        _statusMessage = 'Start tracking failed: $e';
-      });
-    }
-  }
-
-  Future<void> _stopTracking() async {
-    try {
-      await _gazeTracker.stopTracking();
-      setState(() {
-        _isTracking = false;
-        _statusMessage = 'Tracking stopped';
-      });
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Stop tracking failed: $e';
-      });
+      if (!mounted) return;
+      setState(() => _status = 'Failed: $e');
     }
   }
 
   @override
   void dispose() {
-    _gazeTracker.dispose();
+    _subscription?.cancel();
+    _tracker.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('GazePoint SDK Example'),
-      ),
-      body: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'Status: $_statusMessage',
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    if (_isTracking) ...[
-                      Text(
-                        'Gaze Point: (${_gazePoint.dx.toStringAsFixed(0)}, ${_gazePoint.dy.toStringAsFixed(0)})',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Confidence: ${(_confidence * 100).toStringAsFixed(0)}%',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Blinking: ${_isBlinking ? "Yes" : "No"}',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
-                  ],
+    final result = _latest;
+    final face = result?.faceDetected ?? false;
+    final gaze = result?.gazePoint;
+    final statusColor = face && !(result?.hasMultipleFaces ?? false)
+        ? const Color(0xFF69F0AE)
+        : const Color(0xFFFFD54F);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            GazePreview(tracker: _tracker),
+            if (face && gaze != null)
+              Positioned(
+                left: gaze.dx - 14,
+                top: gaze.dy - 14,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isTracking ? null : _startTracking,
-                    child: const Text('Start Tracking'),
-                  ),
-                  const SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _isTracking ? _stopTracking : null,
-                    child: const Text('Stop Tracking'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (_isTracking)
             Positioned(
-              left: _gazePoint.dx - 15,
-              top: _gazePoint.dy - 15,
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                  border: Border.all(
+              left: 16,
+              right: 16,
+              bottom: 56,
+              child: _StatusCard(
+                status: _status,
+                statusColor: statusColor,
+                result: result,
+              ),
+            ),
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: TextButton(
+                onPressed: _started ? _tracker.switchCamera : null,
+                child: const Text(
+                  'SWITCH CAMERA',
+                  style: TextStyle(
                     color: Colors.white,
-                    width: 2,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusCard extends StatelessWidget {
+  const _StatusCard({
+    required this.status,
+    required this.statusColor,
+    required this.result,
+  });
+
+  final String status;
+  final Color statusColor;
+  final GazeResult? result;
+
+  @override
+  Widget build(BuildContext context) {
+    final face = result?.faceDetected ?? false;
+    final gaze = result?.gazePoint;
+    final pose = result?.headPose;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'GazePoint SDK Demo',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            status,
+            style: TextStyle(color: statusColor, fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          if (face && gaze != null && pose != null) ...[
+            Text(
+              'Gaze: (${gaze.dx.toStringAsFixed(0)}, ${gaze.dy.toStringAsFixed(0)})  '
+              'Confidence: ${((result?.confidence ?? 0) * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+            Text(
+              'Head  pitch: ${pose.pitch.toStringAsFixed(1)}  '
+              'yaw: ${pose.yaw.toStringAsFixed(1)}  '
+              'roll: ${pose.roll.toStringAsFixed(1)}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+            Text(
+              result?.isBlinking == true ? 'Eyes: blinking' : 'Eyes: open',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ] else
+            const Text(
+              'Point the front camera at your face.',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
             ),
         ],
       ),

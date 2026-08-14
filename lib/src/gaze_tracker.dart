@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 import 'models/gaze_calibration_point.dart';
+import 'models/gaze_tracker_options.dart';
 import 'gazepoint_sdk_platform_interface.dart';
 import 'models/gaze_result.dart';
 import 'models/performance_metrics.dart';
@@ -8,20 +11,20 @@ import 'models/performance_metrics.dart';
 /// Wraps Android, iOS, and macOS via platform channels, and web via
 /// `GazepointSdkWeb` (camera + MediaPipe Face Mesh).
 ///
-/// Example usage:
+/// Metrics-only:
 /// ```dart
 /// final gazeTracker = GazeTracker();
-///
 /// await gazeTracker.initialize();
+/// await gazeTracker.startTracking();
+/// gazeTracker.gazeStream.listen((result) { ... });
+/// ```
 ///
-/// if (await gazeTracker.isSupported() &&
-///     await gazeTracker.requestCameraPermission()) {
-///   await gazeTracker.startTracking();
-///
-///   gazeTracker.gazeStream.listen((result) {
-///     print('Gaze at: ${result.gazePoint}');
-///   });
-/// }
+/// With live preview (opt-in):
+/// ```dart
+/// await gazeTracker.initialize(
+///   options: GazeTrackerOptions(previewEnabled: true),
+/// );
+/// // In the widget tree: GazePreview(tracker: gazeTracker)
 /// ```
 class GazeTracker {
   /// Creates a gaze tracker that talks to the current platform implementation.
@@ -31,6 +34,15 @@ class GazeTracker {
 
   bool _isInitialized = false;
   bool _isTracking = false;
+  GazeTrackerOptions _options = const GazeTrackerOptions();
+
+  /// Whether a [GazePreview] surface should be bound.
+  ///
+  /// Apps can listen to this to rebuild when [setPreviewEnabled] changes.
+  final ValueNotifier<bool> previewEnabled = ValueNotifier<bool>(false);
+
+  /// Last options passed to [initialize] / [setPreviewEnabled].
+  GazeTrackerOptions get options => _options;
 
   /// Whether the tracker is initialized
   bool get isInitialized => _isInitialized;
@@ -40,13 +52,19 @@ class GazeTracker {
 
   /// Initialize the gaze tracker.
   ///
-  /// Must be called before starting tracking.
-  Future<void> initialize() async {
+  /// Must be called before starting tracking. Pass
+  /// [GazeTrackerOptions.previewEnabled] true if the app will show
+  /// [GazePreview]; leave it false to only receive gaze metrics.
+  Future<void> initialize({
+    GazeTrackerOptions options = const GazeTrackerOptions(),
+  }) async {
     if (_isInitialized) {
       throw StateError('GazeTracker is already initialized');
     }
 
-    await _platform.initialize();
+    _options = options;
+    previewEnabled.value = options.previewEnabled;
+    await _platform.initialize(options: options);
     _isInitialized = true;
   }
 
@@ -84,6 +102,27 @@ class GazeTracker {
 
     await _platform.stopTracking();
     _isTracking = false;
+  }
+
+  /// Enable or disable the live camera preview at runtime.
+  ///
+  /// Tracking (metrics) keeps running. When disabled, [GazePreview] shows
+  /// a black surface and the camera analysis pipeline stays headless.
+  Future<void> setPreviewEnabled(bool enabled) async {
+    if (!_isInitialized) {
+      throw StateError('GazeTracker not initialized');
+    }
+    _options = _options.copyWith(previewEnabled: enabled);
+    previewEnabled.value = enabled;
+    await _platform.setPreviewEnabled(enabled);
+  }
+
+  /// Switch between the front and back cameras.
+  Future<void> switchCamera() async {
+    if (!_isInitialized) {
+      throw StateError('GazeTracker not initialized');
+    }
+    await _platform.switchCamera();
   }
 
   /// Get the latest gaze result.
@@ -134,7 +173,8 @@ class GazeTracker {
 
   /// Stream of gaze results.
   ///
-  /// Provides real-time updates while tracking is active.
+  /// Provides real-time updates while tracking is active. Frames with no
+  /// face still emit a [GazeResult] with [GazeResult.faceDetected] false.
   Stream<GazeResult> get gazeStream => _platform.gazeStream;
 
   /// Check if gaze tracking is supported on this device
@@ -157,6 +197,7 @@ class GazeTracker {
     if (_isTracking) {
       await stopTracking();
     }
+    previewEnabled.dispose();
     _isInitialized = false;
     _isTracking = false;
   }

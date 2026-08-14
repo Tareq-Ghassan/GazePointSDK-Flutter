@@ -29,6 +29,8 @@ Advanced cross-platform Flutter plugin for **real-time eye tracking and gaze poi
 
 **Note:** Camera permission is required on all platforms.
 
+Live camera preview, white face boxes, and `"Multiple faces detected"` are implemented in the **native** SDKs (`GazeCamera` in `android/`, `ios/`, `web/`, `macos/`). Gaze is only calculated when exactly one face is in frame. This plugin wraps those APIs; do not reimplement camera or overlay logic in Dart.
+
 ## 📦 Installation
 
 Add to your `pubspec.yaml`:

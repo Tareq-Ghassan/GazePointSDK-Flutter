@@ -3,6 +3,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'gazepoint_sdk_method_channel.dart';
 import 'models/gaze_calibration_point.dart';
 import 'models/gaze_result.dart';
+import 'models/gaze_tracker_options.dart';
 import 'models/performance_metrics.dart';
 
 /// The interface that implementations of gazepoint_sdk must implement.
@@ -26,7 +27,9 @@ abstract class GazepointSdkPlatform extends PlatformInterface {
   }
 
   /// Initialize the gaze tracker
-  Future<void> initialize() {
+  Future<void> initialize({
+    GazeTrackerOptions options = const GazeTrackerOptions(),
+  }) {
     throw UnimplementedError('initialize() has not been implemented.');
   }
 
@@ -38,6 +41,16 @@ abstract class GazepointSdkPlatform extends PlatformInterface {
   /// Stop gaze tracking
   Future<void> stopTracking() {
     throw UnimplementedError('stopTracking() has not been implemented.');
+  }
+
+  /// Bind or unbind the live camera preview used by [GazePreview].
+  Future<void> setPreviewEnabled(bool enabled) {
+    throw UnimplementedError('setPreviewEnabled() has not been implemented.');
+  }
+
+  /// Switch between front and back cameras (no-op if only one camera exists).
+  Future<void> switchCamera() {
+    throw UnimplementedError('switchCamera() has not been implemented.');
   }
 
   /// Get the latest gaze result

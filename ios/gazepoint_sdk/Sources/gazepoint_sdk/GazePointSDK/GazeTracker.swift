@@ -11,7 +11,7 @@ public class GazeTracker {
     
     // MARK: - Types
     
-    public struct GazeResult {
+    public struct GazeResult: Sendable {
         public let gazePoint: CGPoint
         public let confidence: Float
         public let isBlinking: Bool
@@ -27,7 +27,7 @@ public class GazeTracker {
         }
     }
     
-    public struct HeadPose {
+    public struct HeadPose: Sendable {
         public let pitch: Float // Nodding up/down
         public let yaw: Float   // Turning left/right
         public let roll: Float  // Tilting left/right
@@ -37,6 +37,19 @@ public class GazeTracker {
             self.yaw = yaw
             self.roll = roll
         }
+    }
+
+    /// All faces in a frame. Gaze is set only when exactly one face is present.
+    public struct FrameAnalysis: Sendable {
+        public let gaze: GazeResult?
+        public let faceBoundingBoxes: [CGRect]
+
+        public init(gaze: GazeResult?, faceBoundingBoxes: [CGRect]) {
+            self.gaze = gaze
+            self.faceBoundingBoxes = faceBoundingBoxes
+        }
+
+        public var faceCount: Int { faceBoundingBoxes.count }
     }
     
     public struct CalibrationData: Codable {
@@ -59,7 +72,7 @@ public class GazeTracker {
     
     private let smoothingFactor: Float = 0.3
     private let minConfidenceThreshold: Float = 0.5
-    private let blinkThreshold: Float = 0.3
+    private let blinkThreshold: Float = 0.18
     private let velocityThreshold: Float = 100.0
     
     private var lastGazePoint: CGPoint?
@@ -83,29 +96,48 @@ public class GazeTracker {
     
     // MARK: - Public Methods
     
-    /// Calculate gaze point from a CVPixelBuffer
-    public func calculateGazePoint(from pixelBuffer: CVPixelBuffer, orientation: CGImagePropertyOrientation = .up) -> GazeResult? {
+    /// Calculate gaze point from a CVPixelBuffer. Returns nil when zero or multiple faces are in frame.
+    public func calculateGazePoint(
+        from pixelBuffer: CVPixelBuffer,
+        orientation: CGImagePropertyOrientation = .up,
+        screenSize: CGSize = .zero
+    ) -> GazeResult? {
+        return analyze(from: pixelBuffer, orientation: orientation, screenSize: screenSize).gaze
+    }
+
+    /// Detect every face. Gaze is estimated only when `faceCount == 1`.
+    public func analyze(
+        from pixelBuffer: CVPixelBuffer,
+        orientation: CGImagePropertyOrientation = .up,
+        screenSize: CGSize = .zero
+    ) -> FrameAnalysis {
         let startTime = performanceMonitor.startFrame()
         defer {
             performanceMonitor.endFrame(startTime: startTime)
         }
-        
+
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: orientation, options: [:])
-        
+        let outputSize = screenSize.width > 1 && screenSize.height > 1
+            ? screenSize
+            : CGSize(width: 390, height: 844)
+
         do {
             try handler.perform([faceDetectionRequest])
-            
-            guard let observations = faceDetectionRequest.results,
-                  let faceObservation = observations.first else {
-                return nil
+            let observations = faceDetectionRequest.results ?? []
+            let gaze: GazeResult?
+            if observations.count == 1, let face = observations.first {
+                gaze = processGaze(from: face, screenSize: outputSize)
+            } else {
+                lastGazePoint = nil
+                gaze = nil
             }
-            
-            let result = processGaze(from: faceObservation)
-            return result
-            
+            return FrameAnalysis(
+                gaze: gaze,
+                faceBoundingBoxes: observations.map(\.boundingBox)
+            )
         } catch {
             print("Error performing face detection: \(error)")
-            return nil
+            return FrameAnalysis(gaze: nil, faceBoundingBoxes: [])
         }
     }
     
@@ -124,11 +156,13 @@ public class GazeTracker {
             try handler.perform([faceDetectionRequest])
             
             guard let observations = faceDetectionRequest.results,
+                  observations.count == 1,
                   let faceObservation = observations.first else {
+                lastGazePoint = nil
                 return nil
             }
             
-            return processGaze(from: faceObservation)
+            return processGaze(from: faceObservation, screenSize: image.size)
             
         } catch {
             print("Error performing face detection: \(error)")
@@ -187,44 +221,33 @@ public class GazeTracker {
     
     // MARK: - Private Methods
     
-    private func processGaze(from faceObservation: VNFaceObservation) -> GazeResult? {
-        guard let landmarks = faceObservation.landmarks else {
-            return nil
-        }
-        
-        // Get eye landmarks
-        guard let leftEye = landmarks.leftEye,
+    private func processGaze(from faceObservation: VNFaceObservation, screenSize: CGSize) -> GazeResult? {
+        guard let landmarks = faceObservation.landmarks,
+              let leftEye = landmarks.leftEye,
               let rightEye = landmarks.rightEye else {
             return nil
         }
-        
-        // Detect blink
-        let isBlinking = detectBlink(leftEye: leftEye, rightEye: rightEye, faceObservation: faceObservation)
-        
-        // Calculate head pose
+
+        let isBlinking = detectBlink(leftEye: leftEye, rightEye: rightEye)
         let headPose = calculateHeadPose(from: faceObservation)
-        
-        // Calculate gaze vector
-        let gazeVector = calculateGazeVector(leftEye: leftEye, rightEye: rightEye, headPose: headPose)
-        
-        // Apply calibration if available
-        let calibratedVector = applyCalibration(to: gazeVector)
-        
-        // Map to screen coordinates
-        let screenSize = UIScreen.main.bounds.size
-        let screenPoint = mapGazeVectorToScreen(gazeVector: calibratedVector, headPose: headPose, screenSize: screenSize)
-        
-        // Apply Kalman filter
+        let look = lookDirection(
+            leftEye: leftEye,
+            rightEye: rightEye,
+            leftPupil: landmarks.leftPupil,
+            rightPupil: landmarks.rightPupil,
+            headPose: headPose
+        )
+        let calibrated = applyCalibration(to: look)
+        let screenPoint = CGPoint(
+            x: max(0, min(screenSize.width, calibrated.x * screenSize.width)),
+            y: max(0, min(screenSize.height, (1 - calibrated.y) * screenSize.height))
+        )
         let filteredPoint = kalmanFilter.update(measurement: screenPoint)
-        
-        // Apply adaptive smoothing
         let smoothedPoint = applyAdaptiveSmoothing(currentPoint: filteredPoint)
-        
-        // Calculate confidence
         let confidence = calculateConfidence(faceObservation: faceObservation, isBlinking: isBlinking)
-        
+
         lastGazePoint = smoothedPoint
-        
+
         return GazeResult(
             gazePoint: smoothedPoint,
             confidence: confidence,
@@ -233,93 +256,66 @@ public class GazeTracker {
             timestamp: Date().timeIntervalSince1970
         )
     }
-    
-    private func calculateGazeVector(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D, headPose: HeadPose) -> CGPoint {
-        let leftPoints = leftEye.normalizedPoints
-        let rightPoints = rightEye.normalizedPoints
-        
-        guard !leftPoints.isEmpty, !rightPoints.isEmpty else {
-            return .zero
-        }
-        
-        // Calculate eye centers
-        let leftCenter = averagePoint(points: leftPoints)
-        let rightCenter = averagePoint(points: rightPoints)
-        
-        // Calculate eye midpoint
-        let eyeMidX = (leftCenter.x + rightCenter.x) / 2
-        let eyeMidY = (leftCenter.y + rightCenter.y) / 2
-        
-        // Calculate base gaze vector
-        var gazeX = rightCenter.x - leftCenter.x
-        var gazeY = rightCenter.y - leftCenter.y
-        
-        // Compensate for head rotation
-        gazeX += CGFloat(headPose.yaw) * 0.005
-        gazeY += CGFloat(headPose.pitch) * 0.005
-        
-        // Normalize
-        let magnitude = sqrt(gazeX * gazeX + gazeY * gazeY)
-        if magnitude > 0 {
-            gazeX /= magnitude
-            gazeY /= magnitude
-        }
-        
-        return CGPoint(x: gazeX, y: gazeY)
+
+    /// Normalized look direction in 0...1 (origin bottom-left of the screen).
+    /// Uses pupil position inside each eye socket, plus head yaw/pitch in degrees.
+    private func lookDirection(
+        leftEye: VNFaceLandmarkRegion2D,
+        rightEye: VNFaceLandmarkRegion2D,
+        leftPupil: VNFaceLandmarkRegion2D?,
+        rightPupil: VNFaceLandmarkRegion2D?,
+        headPose: HeadPose
+    ) -> CGPoint {
+        let left = pupilInEye(eye: leftEye, pupil: leftPupil)
+        let right = pupilInEye(eye: rightEye, pupil: rightPupil)
+        var x = (left.x + right.x) / 2
+        var y = (left.y + right.y) / 2
+        x += CGFloat(headPose.yaw) / 55
+        y += CGFloat(headPose.pitch) / 45
+        return CGPoint(x: min(1, max(0, x)), y: min(1, max(0, y)))
     }
-    
-    private func calculateHeadPose(from faceObservation: VNFaceObservation) -> HeadPose {
-        let pitch = faceObservation.pitch?.floatValue ?? 0
-        let yaw = faceObservation.yaw?.floatValue ?? 0
-        let roll = faceObservation.roll?.floatValue ?? 0
-        
-        return HeadPose(
-            pitch: pitch,
-            yaw: yaw,
-            roll: roll
+
+    private func pupilInEye(eye: VNFaceLandmarkRegion2D, pupil: VNFaceLandmarkRegion2D?) -> CGPoint {
+        let pts = eye.normalizedPoints
+        guard pts.count >= 2 else { return CGPoint(x: 0.5, y: 0.5) }
+        let minX = pts.map(\.x).min() ?? 0
+        let maxX = pts.map(\.x).max() ?? 1
+        let minY = pts.map(\.y).min() ?? 0
+        let maxY = pts.map(\.y).max() ?? 1
+        let pupilPts = pupil?.normalizedPoints ?? []
+        let focus = pupilPts.isEmpty ? averagePoint(points: pts) : averagePoint(points: pupilPts)
+        let spanX = max(maxX - minX, 0.001)
+        let spanY = max(maxY - minY, 0.001)
+        return CGPoint(
+            x: min(1, max(0, (focus.x - minX) / spanX)),
+            y: min(1, max(0, (focus.y - minY) / spanY))
         )
     }
-    
-    private func detectBlink(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D, faceObservation: VNFaceObservation) -> Bool {
-        // Calculate eye aspect ratios
-        let leftEAR = calculateEyeAspectRatio(eye: leftEye)
-        let rightEAR = calculateEyeAspectRatio(eye: rightEye)
-        
-        let avgEAR = (leftEAR + rightEAR) / 2
-        
-        return avgEAR < blinkThreshold
+
+    private func calculateHeadPose(from faceObservation: VNFaceObservation) -> HeadPose {
+        let toDegrees: (Float) -> Float = { $0 * 180 / .pi }
+        return HeadPose(
+            pitch: toDegrees(faceObservation.pitch?.floatValue ?? 0),
+            yaw: toDegrees(faceObservation.yaw?.floatValue ?? 0),
+            roll: toDegrees(faceObservation.roll?.floatValue ?? 0)
+        )
     }
-    
-    private func calculateEyeAspectRatio(eye: VNFaceLandmarkRegion2D) -> Float {
+
+    private func detectBlink(leftEye: VNFaceLandmarkRegion2D, rightEye: VNFaceLandmarkRegion2D) -> Bool {
+        let avg = (eyeOpenness(leftEye) + eyeOpenness(rightEye)) / 2
+        return avg < blinkThreshold
+    }
+
+    private func eyeOpenness(_ eye: VNFaceLandmarkRegion2D) -> Float {
         let points = eye.normalizedPoints
-        guard points.count >= 6 else { return 1.0 }
-        
-        // Simplified EAR calculation
-        // EAR = (vertical distance) / (horizontal distance)
-        let vertical1 = distance(from: points[1], to: points[5])
-        let vertical2 = distance(from: points[2], to: points[4])
-        let horizontal = distance(from: points[0], to: points[3])
-        
-        if horizontal == 0 { return 1.0 }
-        
-        let ear = Float((vertical1 + vertical2) / (2.0 * horizontal))
-        return ear
-    }
-    
-    private func mapGazeVectorToScreen(gazeVector: CGPoint, headPose: HeadPose, screenSize: CGSize) -> CGPoint {
-        // Apply head pose compensation
-        let yawFactor: CGFloat = 1.0 + (CGFloat(abs(headPose.yaw)) / 30.0) * 0.2
-        let pitchFactor: CGFloat = 1.0 + (CGFloat(abs(headPose.pitch)) / 30.0) * 0.2
-        
-        // Map to screen coordinates
-        var screenX = (screenSize.width / 2) + (gazeVector.x * (screenSize.width / 2) * yawFactor)
-        var screenY = (screenSize.height / 2) - (gazeVector.y * (screenSize.height / 2) * pitchFactor)
-        
-        // Clamp to screen bounds
-        screenX = max(0, min(screenSize.width, screenX))
-        screenY = max(0, min(screenSize.height, screenY))
-        
-        return CGPoint(x: screenX, y: screenY)
+        guard points.count >= 2 else { return 1 }
+        let minX = points.map(\.x).min() ?? 0
+        let maxX = points.map(\.x).max() ?? 1
+        let minY = points.map(\.y).min() ?? 0
+        let maxY = points.map(\.y).max() ?? 1
+        let width = maxX - minX
+        guard width > 0 else { return 1 }
+        return Float((maxY - minY) / width)
     }
     
     private func applyCalibration(to gazeVector: CGPoint) -> CGPoint {
@@ -390,11 +386,5 @@ public class GazeTracker {
         }
         
         return CGPoint(x: sumX / CGFloat(points.count), y: sumY / CGFloat(points.count))
-    }
-    
-    private func distance(from p1: CGPoint, to p2: CGPoint) -> CGFloat {
-        let dx = p2.x - p1.x
-        let dy = p2.y - p1.y
-        return sqrt(dx * dx + dy * dy)
     }
 }

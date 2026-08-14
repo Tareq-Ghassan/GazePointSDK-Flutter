@@ -9,6 +9,7 @@ import 'package:web/web.dart' as web;
 import 'src/gazepoint_sdk_platform_interface.dart';
 import 'src/models/gaze_calibration_point.dart';
 import 'src/models/gaze_result.dart';
+import 'src/models/gaze_tracker_options.dart';
 import 'src/models/head_pose.dart';
 import 'src/models/performance_metrics.dart';
 
@@ -46,7 +47,9 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
   final List<GazeCalibrationPoint> _calibration = [];
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize({
+    GazeTrackerOptions options = const GazeTrackerOptions(),
+  }) async {
     await _ensureScripts();
     _video ??= web.HTMLVideoElement()
       ..autoplay = true
@@ -55,6 +58,16 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
       ..style.display = 'none';
     web.document.body?.append(_video!);
     _initialized = true;
+  }
+
+  @override
+  Future<void> setPreviewEnabled(bool enabled) async {
+    _video?.style.display = enabled ? 'block' : 'none';
+  }
+
+  @override
+  Future<void> switchCamera() async {
+    // Web uses the user-facing camera by default.
   }
 
   @override
@@ -231,7 +244,7 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
     }
     final list = faces as JSArray<JSObject>;
     if (list.length == 0) {
-      _droppedFrames++;
+      _gazeController.add(GazeResult.noFace());
       return;
     }
     final landmarks = list[0];
@@ -347,6 +360,7 @@ class GazepointSdkWeb extends GazepointSdkPlatform {
       isBlinking: blinking,
       headPose: HeadPose(pitch: pitch, yaw: yaw, roll: 0),
       timestamp: DateTime.now().millisecondsSinceEpoch,
+      statusText: blinking ? 'Blink detected' : 'Tracking',
     );
   }
 
