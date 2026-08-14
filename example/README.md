@@ -56,7 +56,7 @@ See the umbrella [TESTING.md](https://github.com/Tareq-Ghassan/FaceDetection-Gaz
 - MediaPipe Face Mesh loads from jsDelivr — needs network access.
 
 ### macOS
-- Minimum macOS version: 12.0 (`MACOSX_DEPLOYMENT_TARGET` in `macos/Runner.xcodeproj`)
+- Minimum macOS version: 13.0 (`MACOSX_DEPLOYMENT_TARGET` in `macos/Runner.xcodeproj`)
 - Camera permission + `com.apple.security.device.camera` in entitlements (already set)
 - Allow Camera in System Settings if prompted. After a plugin SPM layout change, run `flutter clean` then `flutter run -d macos`.
 - Windows / Linux still fail until those plugin implementations exist.

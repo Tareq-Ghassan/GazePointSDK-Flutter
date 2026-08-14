@@ -1,6 +1,8 @@
 ## 3.0.4
 
-* Depend on JitPack `GazePointSDK-Android:2.1.1`. Tag `2.1.0` never built on JitPack (`Error`), so Android apps using 3.0.3 fail with "Could not find ...:2.1.0".
+* Wrap native `GazeCamera` on Android (JitPack `2.2.0`), iOS (source snapshot), and macOS (source snapshot). Preview, white face boxes, and multi-face status live in the native SDKs.
+* macOS plugin minimum is 13.0 (Ventura), matching GazePointSDK-macOS. Example `MACOSX_DEPLOYMENT_TARGET` is 13.0.
+* Depend on JitPack `GazePointSDK-Android:2.2.0` (`GazeCamera`). Tag `2.1.0` never built on JitPack (`Error`); 3.0.3 cannot resolve Android.
 * Example app `compileSdk = 37` (plugin requires 37; Flutter's default was 36).
 * Example Gradle repositories include `https://jitpack.io`.
 * Pin the plugin Kotlin `jvmTarget` to 17 so it matches Java 17 (AGP 9 / JDK 25 otherwise compiles Kotlin as 25 and the Android example fails).

@@ -12,7 +12,7 @@
 /// - **iOS** (16.0+) - Vision Framework + AVFoundation
 /// - **Web** - MediaPipe Face Mesh + TensorFlow.js
 /// - **Windows** (10+) - Windows.Media.FaceAnalysis + ML.NET
-/// - **macOS** (12.0+) - Vision Framework + AVFoundation
+/// - **macOS** (13.0+) - Vision Framework + AVFoundation
 /// - **Linux** (Ubuntu 20.04+) - OpenCV + dlib + V4L2
 ///
 /// ## Features

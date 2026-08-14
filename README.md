@@ -24,7 +24,7 @@ Advanced cross-platform Flutter plugin for **real-time eye tracking and gaze poi
 | 🍎 iOS | ✅ Full | Vision Framework + AVFoundation | iOS 16.0+ |
 | 🌐 Web | ✅ Full | MediaPipe Face Mesh (jsDelivr CDN) | Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ |
 | 🪟 Windows | ⚠️ Declared | Plugin class not implemented yet | Windows 10+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Windows) |
-| 🖥️ macOS | ✅ Full | Vision Framework + AVFoundation | macOS 12.0+ |
+| 🖥️ macOS | ✅ Full | Vision Framework + AVFoundation | macOS 13.0+ |
 | 🐧 Linux | ⚠️ Declared | Plugin class not implemented yet | Ubuntu 20.04+ — use the [native SDK](https://github.com/Tareq-Ghassan/GazePointSDK-Linux) |
 
 **Note:** Camera permission is required on all platforms.
@@ -198,7 +198,7 @@ class _MyAppState extends State<MyApp> {
 **Minimum SDK:** API 24 (Android 7.0)  
 **compileSdk:** 37 (required by this plugin)
 
-The plugin pulls the native library from JitPack (`com.github.Tareq-Ghassan:GazePointSDK-Android:2.1.1`). Use **2.1.1**, not 2.1.0 — JitPack never produced a 2.1.0 artifact.
+The plugin pulls the native library from JitPack (`com.github.Tareq-Ghassan:GazePointSDK-Android:2.2.0`). Use **2.2.0** for `GazeCamera`. Tag `2.1.0` never produced a JitPack artifact.
 
 In the **app** `android/build.gradle.kts` (or `build.gradle`):
 
@@ -314,11 +314,11 @@ The Flutter Windows plugin class is **not implemented** yet (`pluginClass: Gazep
 
 ### macOS
 
-**Minimum Version:** macOS 12.0 (Monterey)
+**Minimum Version:** macOS 13.0 (Ventura)
 
-The **app** must also target macOS 12+. In `macos/Runner.xcodeproj` set `MACOSX_DEPLOYMENT_TARGET = 12.0` (Flutter’s default is 10.15, which fails SwiftPM with “gazepoint-sdk requires 12.0”).
+The **app** must also target macOS 13+. In `macos/Runner.xcodeproj` set `MACOSX_DEPLOYMENT_TARGET = 13.0` (Flutter’s default is 10.15, which fails SwiftPM with “gazepoint-sdk requires 13.0”).
 
-Plugin sources live in `macos/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `macos/gazepoint_sdk.podspec`. This is a Vision + AVFoundation implementation, not a wrap of GazePointSDK-macOS.
+Plugin sources live in `macos/gazepoint_sdk/Sources/gazepoint_sdk` (inside the package root). CocoaPods still works via `macos/gazepoint_sdk.podspec`. This is a source snapshot of GazePointSDK-macOS (`GazeCamera`); releasing that repo does not update pub.dev until the snapshot is refreshed.
 
 Add camera permission to `macos/Runner/Info.plist`:
 
@@ -467,7 +467,7 @@ Expected performance metrics:
 
 ### Gradle: Could not find GazePointSDK-Android:2.1.0
 
-JitPack **2.1.0** is `Error`. This plugin 3.0.4+ depends on **2.1.1**. Add `maven { url = uri("https://jitpack.io") }` to the app’s repositories and set `compileSdk = 37`.
+JitPack **2.1.0** is `Error`. This plugin 3.0.4+ depends on **2.2.0**. Add `maven { url = uri("https://jitpack.io") }` to the app’s repositories and set `compileSdk = 37`.
 
 ### Gradle: Inconsistent JVM-target (Java 17 vs Kotlin 25)
 

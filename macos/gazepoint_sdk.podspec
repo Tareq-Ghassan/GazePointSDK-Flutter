@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.summary          = 'Flutter plugin for GazePoint SDK'
   s.description      = <<-DESC
     Cross-platform Flutter plugin for eye tracking and gaze point detection.
-    macOS uses Vision face landmarks and AVFoundation.
+    macOS wraps the GazePointSDK-macOS snapshot (GazeCamera).
   DESC
   s.homepage         = 'https://github.com/Tareq-Ghassan/GazePointSDK-Flutter'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files     = 'gazepoint_sdk/Sources/gazepoint_sdk/**/*'
   s.dependency 'FlutterMacOS'
-  s.platform = :osx, '12.0'
+  s.platform = :osx, '13.0'
   s.frameworks       = 'Vision', 'AppKit', 'AVFoundation', 'CoreMedia'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.9'

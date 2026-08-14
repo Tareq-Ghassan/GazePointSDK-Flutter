@@ -3,27 +3,29 @@ import Cocoa
 import FlutterMacOS
 
 /**
- Flutter macOS plugin wrapper around Vision + AVFoundation gaze tracking.
- Sources live under Sources/gazepoint_sdk so Swift Package Manager can resolve
- the package (path: "../Classes" is outside the package root and Xcode rejects it).
+ Flutter plugin wrapper around the macOS GazePoint SDK snapshot.
+ Camera preview, face boxes, and tracking live in GazeCamera.
  */
+@available(macOS 13.0, *)
 public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var methodChannel: FlutterMethodChannel?
     private var eventChannel: FlutterEventChannel?
     private var eventSink: FlutterEventSink?
 
-    private var gazeTracker: GazeTracker?
+    private var camera: GazeCamera?
     private var isInitialized = false
-    private var isTracking = false
     private var latestResult: [String: Any]?
-
-    private let session = AVCaptureSession()
-    private let sessionQueue = DispatchQueue(label: "com.gazepoint.flutter.macos.camera")
-    private let videoOutput = AVCaptureVideoDataOutput()
-    private var frameProcessor: FrameProcessor?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = GazepointSdkPlugin()
+        instance.camera = GazeCamera()
+        instance.camera?.onFrame = { [weak instance] frame in
+            let mapped = instance?.toMap(frame)
+            instance?.latestResult = mapped
+            DispatchQueue.main.async {
+                instance?.eventSink?(mapped)
+            }
+        }
 
         let methodChannel = FlutterMethodChannel(
             name: "gazepoint_sdk",
@@ -38,27 +40,60 @@ public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         )
         instance.eventChannel = eventChannel
         eventChannel.setStreamHandler(instance)
+
+        registrar.register(
+            GazePreviewFactory(plugin: instance),
+            withId: "gazepoint_sdk/preview"
+        )
+    }
+
+    func previewView() -> GazePreviewView? {
+        camera?.previewView
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
-            if gazeTracker == nil {
-                gazeTracker = GazeTracker()
+            let args = call.arguments as? [String: Any]
+            let previewEnabled = args?["previewEnabled"] as? Bool ?? false
+            let showFaceBoxes = args?["showFaceBoxes"] as? Bool ?? true
+            if camera == nil {
+                let cam = GazeCamera()
+                cam.onFrame = { [weak self] frame in
+                    let mapped = self?.toMap(frame)
+                    self?.latestResult = mapped
+                    DispatchQueue.main.async {
+                        self?.eventSink?(mapped)
+                    }
+                }
+                camera = cam
             }
+            camera?.options = GazeCameraOptions(
+                previewEnabled: previewEnabled,
+                showFaceBoxes: showFaceBoxes
+            )
             isInitialized = true
             result(nil)
 
         case "startTracking":
-            guard isInitialized else {
+            guard isInitialized, let camera else {
                 result(FlutterError(code: "NOT_INITIALIZED", message: "Call initialize() first", details: nil))
                 return
             }
-            startCamera()
+            camera.start()
             result(nil)
 
         case "stopTracking":
-            stopCamera()
+            camera?.stop()
+            result(nil)
+
+        case "setPreviewEnabled":
+            let enabled = (call.arguments as? [String: Any])?["enabled"] as? Bool ?? false
+            camera?.previewEnabled = enabled
+            result(nil)
+
+        case "switchCamera":
+            camera?.switchCamera()
             result(nil)
 
         case "getLatestGaze":
@@ -96,19 +131,19 @@ public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 result(FlutterError(code: "INVALID_ARGS", message: "Invalid calibration point format", details: nil))
                 return
             }
-            gazeTracker?.calibrate(calibrationPoints: points)
+            camera?.calibrate(calibrationPoints: points)
             result(nil)
 
         case "resetCalibration":
-            gazeTracker?.resetCalibration()
+            camera?.resetCalibration()
             result(nil)
 
         case "getPerformanceMetrics":
-            guard let tracker = gazeTracker else {
+            guard let camera else {
                 result(FlutterError(code: "NOT_INITIALIZED", message: "Tracker not initialized", details: nil))
                 return
             }
-            let metrics = tracker.getPerformanceMetrics()
+            let metrics = camera.getPerformanceMetrics()
             result([
                 "fps": Double(metrics.fps),
                 "avgProcessingTimeMs": Double(metrics.avgProcessingTimeMs),
@@ -151,121 +186,52 @@ public class GazepointSdkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         return nil
     }
 
-    private func startCamera() {
-        if isTracking { return }
-
-        let tracker = gazeTracker ?? GazeTracker()
-        gazeTracker = tracker
-
-        let processor = FrameProcessor(tracker: tracker) { [weak self] gazeResult in
-            guard let self else { return }
-            let mapped = gazeResult.map { self.toMap($0) }
-            self.latestResult = mapped
-            DispatchQueue.main.async {
-                self.eventSink?(mapped)
-            }
-        }
-        frameProcessor = processor
-
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            self.configureSession(processor: processor)
-            if !self.session.isRunning {
-                self.session.startRunning()
-            }
-            self.isTracking = true
-        }
-    }
-
-    private func stopCamera() {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            if self.session.isRunning {
-                self.session.stopRunning()
-            }
-            self.isTracking = false
-        }
-    }
-
-    private func configureSession(processor: FrameProcessor) {
-        session.beginConfiguration()
-        session.sessionPreset = .high
-
-        session.inputs.forEach { session.removeInput($0) }
-        session.outputs.forEach { session.removeOutput($0) }
-
-        guard
-            let camera = AVCaptureDevice.default(for: .video),
-            let input = try? AVCaptureDeviceInput(device: camera),
-            session.canAddInput(input)
-        else {
-            session.commitConfiguration()
-            return
-        }
-
-        session.addInput(input)
-
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]
-
-        guard session.canAddOutput(videoOutput) else {
-            session.commitConfiguration()
-            return
-        }
-
-        session.addOutput(videoOutput)
-        videoOutput.setSampleBufferDelegate(
-            processor,
-            queue: DispatchQueue(label: "com.gazepoint.flutter.macos.frames")
-        )
-
-        if let connection = videoOutput.connection(with: .video) {
-            if connection.isVideoOrientationSupported {
-                connection.videoOrientation = .portrait
-            }
-            if connection.isVideoMirroringSupported {
-                connection.isVideoMirrored = true
-            }
-        }
-
-        session.commitConfiguration()
-    }
-
-    private func toMap(_ result: GazeTracker.GazeResult) -> [String: Any] {
-        return [
-            "gazePointX": Double(result.gazePoint.x),
-            "gazePointY": Double(result.gazePoint.y),
-            "confidence": Double(result.confidence),
-            "isBlinking": result.isBlinking,
-            "headPose": [
-                "pitch": Double(result.headPose.pitch),
-                "yaw": Double(result.headPose.yaw),
-                "roll": Double(result.headPose.roll)
-            ],
+    private func toMap(_ frame: GazeFrame) -> [String: Any] {
+        var map: [String: Any] = [
+            "faceDetected": frame.faceDetected,
+            "faceCount": frame.faceCount,
+            "statusText": frame.statusText,
             "timestamp": Int(Date().timeIntervalSince1970 * 1000)
         ]
+        if let gaze = frame.gaze {
+            map["gazePointX"] = Double(gaze.gazePoint.x)
+            map["gazePointY"] = Double(gaze.gazePoint.y)
+            map["confidence"] = Double(gaze.confidence)
+            map["isBlinking"] = gaze.isBlinking
+            map["headPose"] = [
+                "pitch": Double(gaze.headPose.pitch),
+                "yaw": Double(gaze.headPose.yaw),
+                "roll": Double(gaze.headPose.roll)
+            ]
+        }
+        return map
     }
 }
 
-/// Runs off the main thread so camera callbacks stay non-blocking.
-final class FrameProcessor: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private let tracker: GazeTracker
-    private let onResult: (GazeTracker.GazeResult?) -> Void
+@available(macOS 13.0, *)
+final class GazePreviewFactory: NSObject, FlutterPlatformViewFactory {
+    private weak var plugin: GazepointSdkPlugin?
 
-    init(tracker: GazeTracker, onResult: @escaping (GazeTracker.GazeResult?) -> Void) {
-        self.tracker = tracker
-        self.onResult = onResult
+    init(plugin: GazepointSdkPlugin) {
+        self.plugin = plugin
+        super.init()
     }
 
-    func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let result = tracker.calculateGazePoint(from: pixelBuffer, orientation: .up)
-        onResult(result)
+    func createArgsCodec() -> (FlutterMessageCodec & NSObjectProtocol)? {
+        FlutterStandardMessageCodec.sharedInstance()
+    }
+
+    func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
+        let container = NSView(frame: .zero)
+        container.wantsLayer = true
+        container.layer?.backgroundColor = NSColor.black.cgColor
+        if let preview = plugin?.previewView() {
+            preview.removeFromSuperview()
+            preview.translatesAutoresizingMaskIntoConstraints = true
+            preview.autoresizingMask = [.width, .height]
+            preview.frame = container.bounds
+            container.addSubview(preview)
+        }
+        return container
     }
 }
